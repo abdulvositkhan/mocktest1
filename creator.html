@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Test yaratish</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:linear-gradient(90deg,#3b82f6,#10b981);
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+.card{
+  background:#fff;
+  width:100%;
+  max-width:900px;
+  padding:30px;
+  border-radius:20px;
+  box-shadow:0 20px 50px rgba(0,0,0,0.2);
+}
+h2{margin-top:0}
+input,select{
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  border-radius:10px;
+  border:1px solid #d1d5db;
+  font-size:15px;
+}
+button{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  background:#4f46e5;
+  color:white;
+  font-size:16px;
+  font-weight:bold;
+  cursor:pointer;
+  margin-top:10px;
+}
+button.red{background:#dc2626}
+button.green{background:#16a34a}
+.row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.qbox{
+  border:1.5px dashed #d1d5db;
+  padding:15px;
+  border-radius:12px;
+  margin-top:15px;
+}
+.test-list{
+  margin-top:20px;
+}
+.test-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border:1px solid #e5e7eb;
+  padding:10px;
+  border-radius:10px;
+  margin-top:8px;
+}
+.small-btn{
+  padding:6px 12px;
+  border-radius:8px;
+  font-size:14px;
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+
+<h2>Admin — Test yaratish</h2>
+
+<input id="testId" placeholder="Test ID (masalan: FIZ2025)">
+<select id="fan">
+  <option value="">Fan tanlang</option>
+  <option>Matematika</option>
+  <option>Fizika</option>
+  <option>Informatika</option>
+</select>
+
+<div class="row">
+  <input type="date" id="date">
+  <input type="number" id="duration" placeholder="Davomiylik (daq)">
+</div>
+
+<div class="row">
+  <input type="time" id="start">
+  <input type="time" id="end">
+</div>
+
+<hr>
+
+<h3>Qo‘lda savol qo‘shish</h3>
+
+<div class="qbox">
+  <input id="qText" placeholder="Savol matni">
+  <input id="a" placeholder="A variant">
+  <input id="b" placeholder="B variant">
+  <input id="c" placeholder="C variant">
+  <input id="d" placeholder="D variant">
+  <select id="correct">
+    <option value="">To‘g‘ri javob</option>
+    <option>A</option>
+    <option>B</option>
+    <option>C</option>
+    <option>D</option>
+  </select>
+  <button onclick="addQuestion()">Savol qo‘shish</button>
+  <div id="count">Savollar: 0 / 50</div>
+</div>
+
+<button class="green" onclick="saveTest()">TESTNI SAQLASH</button>
+
+<hr>
+
+<h3>Mavjud testlar</h3>
+<div id="tests" class="test-list"></div>
+
+</div>
+
+<script>
+let questions = [];
+
+function addQuestion(){
+  if(questions.length>=50){
+    alert("50 ta savol yetarli");
+    return;
+  }
+  const q = {
+    text:qText.value,
+    options:{A:a.value,B:b.value,C:c.value,D:d.value},
+    correct:correct.value
+  };
+  if(!q.text||!q.correct){
+    alert("Savol to‘liq emas");
+    return;
+  }
+  questions.push(q);
+  qText.value=a.value=b.value=c.value=d.value="";
+  correct.value="";
+  count.innerText=`Savollar: ${questions.length} / 50`;
+}
+
+function saveTest(){
+  const allTests = JSON.parse(localStorage.getItem("allTests")) || {};
+  allTests[testId.value]={
+    fan:fan.value,
+    date:date.value,
+    startTime:start.value,
+    endTime:end.value,
+    duration:duration.value,
+    questions:questions
+  };
+  localStorage.setItem("allTests",JSON.stringify(allTests));
+  alert("Test saqlandi");
+  showTests();
+}
+
+function showTests(){
+  tests.innerHTML="";
+  const allTests = JSON.parse(localStorage.getItem("allTests")) || {};
+  for(const id in allTests){
+    tests.innerHTML+=`
+      <div class="test-item">
+        <b>${id}</b>
+        <div>
+          <button class="small-btn" onclick="editTest('${id}')">✏️</button>
+          <button class="small-btn red" onclick="deleteTest('${id}')">❌</button>
+        </div>
+      </div>`;
+  }
+}
+showTests();
+
+function deleteTest(id){
+  const allTests = JSON.parse(localStorage.getItem("allTests"));
+  delete allTests[id];
+  localStorage.setItem("allTests",JSON.stringify(allTests));
+  showTests();
+}
+
+function editTest(id){
+  const allTests = JSON.parse(localStorage.getItem("allTests"));
+  const t = allTests[id];
+  testId.value=id;
+  fan.value=t.fan;
+  date.value=t.date;
+  start.value=t.startTime;
+  end.value=t.endTime;
+  duration.value=t.duration;
+  questions=t.questions;
+  count.innerText=`Savollar: ${questions.length} / 50`;
+  alert("Tahrirlash rejimi yoqildi. O‘zgartirib saqlang.");
+}
+</script>
+
+</body>
+</html>
