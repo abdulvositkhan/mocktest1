@@ -2,74 +2,52 @@
 <html lang="uz">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Testga kirish</title>
+<link rel="stylesheet" href="css/style.css">
+
 <style>
-body{
-  margin:0;
-  font-family:Arial, sans-serif;
-  background:linear-gradient(135deg,#4f46e5,#22c55e);
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-.card{
-  background:#fff;
-  padding:30px;
-  border-radius:16px;
+.input{
   width:100%;
-  max-width:400px;
-  text-align:center;
-}
-input,button{
-  width:100%;
-  padding:14px;
-  margin:10px 0;
+  padding:12px;
+  margin-bottom:12px;
+  border-radius:8px;
+  border:1px solid #ccc;
   font-size:16px;
 }
-button{
-  background:#4f46e5;
-  color:#fff;
-  border:none;
-  border-radius:10px;
-  font-weight:bold;
-  cursor:pointer;
-}
-.error{color:#dc2626}
 </style>
 </head>
-<body>
+
+<body class="bg-gradient">
 
 <div class="card">
-  <h2>Testga kirish</h2>
+  <h2>🧑‍🎓 Testga kirish</h2>
 
-  <input id="ism" placeholder="Ism">
-  <input id="familiya" placeholder="Familiya">
-  <input id="testId" placeholder="Test ID">
+  <input id="ism" class="input" placeholder="Ism">
+  <input id="familiya" class="input" placeholder="Familiya">
+  <input id="testId" class="input" placeholder="Test ID">
 
-  <button onclick="startTest()">TESTNI BOSHLASH</button>
-  <p id="msg" class="error"></p>
+  <button class="btn green big" onclick="startTest()">
+    TESTNI BOSHLASH
+  </button>
 </div>
 
 <script>
 function startTest(){
-  if(!ism.value || !familiya.value || !testId.value){
-    msg.innerText = "Barcha maydonlarni to‘ldiring";
+  const ism = document.getElementById("ism").value.trim();
+  const familiya = document.getElementById("familiya").value.trim();
+  const testId = document.getElementById("testId").value.trim();
+
+  if(!ism || !familiya || !testId){
+    alert("Iltimos, barcha maydonlarni to‘ldiring");
     return;
   }
 
-  const allTests = JSON.parse(localStorage.getItem("allTests")) || {};
-  if(!allTests[testId.value]){
-    msg.innerText = "Test ID noto‘g‘ri";
-    return;
-  }
+  localStorage.setItem("currentUser", JSON.stringify({
+    ism, familiya
+  }));
+  localStorage.setItem("currentTestId", testId);
 
-  localStorage.setItem("ism", ism.value.trim());
-  localStorage.setItem("familiya", familiya.value.trim());
-  localStorage.setItem("currentTestId", testId.value.trim());
-
-  location.href = "test.html";
+  window.location.href = "test.html";
 }
 </script>
 
