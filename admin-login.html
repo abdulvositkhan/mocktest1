@@ -1,122 +1,53 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Login</title>
-
-<style>
-*{box-sizing:border-box;font-family:Arial,sans-serif}
-
-body{
-  margin:0;
-  min-height:100vh;
-  background:linear-gradient(135deg,#4f46e5,#22c55e);
-  display:flex;
-  justify-content:center;
-  align-items:center;
-}
-
-.card{
-  background:#fff;
-  width:100%;
-  max-width:380px;
-  padding:30px;
-  border-radius:20px;
-  border:2px solid #e5e7eb;
-  box-shadow:0 25px 50px rgba(0,0,0,0.2);
-}
-
-h2{
-  text-align:center;
-  margin-top:0;
-}
-
-input{
-  width:100%;
-  padding:14px;
-  margin-top:14px;
-  border-radius:12px;
-  border:2px solid #e5e7eb;
-  font-size:16px;
-}
-
-button{
-  width:100%;
-  padding:14px;
-  margin-top:20px;
-  border:none;
-  border-radius:14px;
-  background:#4f46e5;
-  color:#fff;
-  font-size:16px;
-  font-weight:bold;
-  cursor:pointer;
-}
-
-.error{
-  color:#dc2626;
-  text-align:center;
-  margin-top:14px;
-  font-weight:bold;
-}
-
-.footer{
-  margin-top:25px;
-  text-align:center;
-  font-size:14px;
-  color:#6b7280;
-}
-.footer span{
-  font-weight:bold;
-  color:#4f46e5;
-}
-</style>
+  <meta charset="UTF-8">
+  <title>Admin kirish</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="bg-gradient">
 
-<div class="card">
-  <h2>🔐 Admin Login</h2>
+  <div class="card">
+    <h2>Admin kirish</h2>
 
-  <input id="login" placeholder="Login">
-  <input id="password" type="password" placeholder="Parol">
+    <input id="login" type="text" placeholder="Login" class="input">
+    <input id="password" type="password" placeholder="Parol" class="input">
 
-  <button onclick="loginAdmin()">Kirish</button>
+    <button class="btn blue big" onclick="adminLogin()">KIRISH</button>
 
-  <div class="error" id="error"></div>
-
-  <div class="footer">
-    Platforma kanali: <span>@Ped_Life_Uz</span>
+    <p id="error" class="error"></p>
   </div>
-</div>
 
 <script>
-/* ===== ADMIN MA'LUMOTLARI ===== */
-/* ⚠️ Xohlasangiz keyin o‘zgartirasiz */
-const ADMIN_LOGIN = "Abdullayev";
-const ADMIN_PASSWORD = "6693";
-
-/* ===== LOGIN ===== */
-function loginAdmin(){
-  const l = document.getElementById("login").value.trim();
-  const p = document.getElementById("password").value.trim();
+function adminLogin() {
+  const login = document.getElementById("login").value.trim();
+  const password = document.getElementById("password").value.trim();
   const error = document.getElementById("error");
 
-  if(!l || !p){
-    error.innerText = "Login va parolni kiriting";
-    return;
-  }
-
-  if(l === ADMIN_LOGIN && p === ADMIN_PASSWORD){
-    localStorage.setItem("adminAuth","true");
-    localStorage.setItem("viewer","admin");
+  if (login === "Abdullayev" && password === "6693") {
+    localStorage.setItem("admin", "true");
     window.location.href = "creator.html";
-  }else{
-    error.innerText = "Login yoki parol noto‘g‘ri";
+  } else {
+    error.innerText = "❌ Login yoki parol noto‘g‘ri";
   }
 }
 </script>
 
+<style>
+.input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+
+.error {
+  color: red;
+  margin-top: 10px;
+}
+</style>
+
 </body>
 </html>
-
