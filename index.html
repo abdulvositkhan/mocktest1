@@ -2,42 +2,143 @@
 <html lang="uz">
 <head>
 <meta charset="UTF-8">
-<title>Mock Attestatsiya</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mock Test Platformasi</title>
+
 <style>
+*{box-sizing:border-box;font-family:Arial,sans-serif}
+
 body{
   margin:0;
-  height:100vh;
+  min-height:100vh;
+  background:linear-gradient(135deg,#4f46e5,#22c55e);
   display:flex;
   justify-content:center;
   align-items:center;
-  background:linear-gradient(135deg,#4f6bd8,#2ecc71);
-  font-family:Arial;
 }
-.card{
+
+.container{
   background:#fff;
-  padding:40px;
-  border-radius:20px;
-  width:380px;
-  text-align:center;
-}
-button{
   width:100%;
-  padding:14px;
-  margin-top:12px;
-  font-size:16px;
-  border:none;
-  border-radius:10px;
-  cursor:pointer;
+  max-width:900px;
+  padding:40px;
+  border-radius:24px;
+  border:2px solid #e5e7eb;
+  box-shadow:0 30px 60px rgba(0,0,0,0.2);
 }
-.admin{background:#5b5be0;color:#fff}
-.user{background:#2ecc71;color:#fff}
+
+h1{
+  text-align:center;
+  margin-top:0;
+  font-size:36px;
+}
+
+.subtitle{
+  text-align:center;
+  color:#374151;
+  margin-bottom:40px;
+  font-size:18px;
+}
+
+.cards{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:30px;
+}
+
+.card{
+  border:2px solid #e5e7eb;
+  border-radius:20px;
+  padding:30px;
+  text-align:center;
+  cursor:pointer;
+  transition:transform .2s, box-shadow .2s;
+}
+
+.card:hover{
+  transform:translateY(-6px);
+  box-shadow:0 20px 40px rgba(0,0,0,0.15);
+}
+
+.card h2{
+  margin-top:0;
+}
+
+.card p{
+  color:#374151;
+  font-size:16px;
+}
+
+.student{background:#ecfdf5}
+.admin{background:#eef2ff}
+
+button{
+  margin-top:20px;
+  padding:14px 28px;
+  font-size:16px;
+  font-weight:bold;
+  border:none;
+  border-radius:14px;
+  cursor:pointer;
+  background:#4f46e5;
+  color:#fff;
+}
+
+.footer{
+  margin-top:40px;
+  text-align:center;
+  font-size:14px;
+  color:#6b7280;
+}
+@media(max-width:700px){
+  .cards{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
-<div class="card">
-  <h2>Demo Attestatsiya</h2>
-  <button class="admin" onclick="location.href='admin-login.html'">Admin</button>
-  <button class="user" onclick="location.href='taker.html'">Test topshirish</button>
+
+<div class="container">
+  <h1>📘 Mock Test Platformasi</h1>
+  <div class="subtitle">
+    Attestatsiya va tayyorgarlik testlari uchun qulay platforma
+  </div>
+
+  <div class="cards">
+    <div class="card student">
+      <h2>👨‍🎓 O‘quvchi</h2>
+      <p>
+        Test topshirish, vaqtni nazorat qilish va
+        yakunda natijani ko‘rish
+      </p>
+      <button onclick="goStudent()">Test topshirish</button>
+    </div>
+
+    <div class="card admin">
+      <h2>👨‍🏫 Admin</h2>
+      <p>
+        Test yaratish, Excel orqali yuklash,
+        savollarni tahrirlash va natijalarni ko‘rish
+      </p>
+      <button onclick="goAdmin()">Admin panel</button>
+    </div>
+  </div>
+
+  <div class="footer">
+    © Mock Test Platformasi — Bepul va cheksiz foydalanish
+  </div>
 </div>
+
+<script>
+function goStudent(){
+  localStorage.removeItem("viewer");
+  location.href = "taker.html";
+}
+
+function goAdmin(){
+  localStorage.setItem("viewer","admin");
+  location.href = "creator.html";
+}
+</script>
+
 </body>
 </html>
