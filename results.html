@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Test natijalari</title>
+<title>Test Natijalari</title>
 
 <style>
 *{box-sizing:border-box;font-family:Arial,sans-serif}
@@ -28,13 +28,13 @@ body{
 }
 
 h1,h2{
-  text-align:center;
   margin-top:0;
+  text-align:center;
 }
 
 .summary{
   text-align:center;
-  padding:30px;
+  padding:25px;
   border-radius:18px;
   margin-bottom:30px;
 }
@@ -45,7 +45,7 @@ h1,h2{
 .blue{background:#dbeafe}
 
 .big{
-  font-size:40px;
+  font-size:38px;
   font-weight:bold;
 }
 
@@ -55,7 +55,7 @@ h1,h2{
 }
 
 .time{
-  margin-top:10px;
+  margin-top:8px;
   color:#374151;
 }
 
@@ -76,7 +76,6 @@ h1,h2{
   color:white;
 }
 
-/* TABLE */
 table{
   width:100%;
   border-collapse:collapse;
@@ -101,29 +100,37 @@ tr:nth-child(even){
 .mid{color:#d97706;font-weight:bold}
 .high{color:#16a34a;font-weight:bold}
 
-/* STUDENT DETAILS */
 .detail{
   border:1px solid #e5e7eb;
   border-radius:12px;
   padding:14px;
   margin-top:10px;
 }
+
 .ok{background:#ecfdf5}
 .bad{background:#fee2e2}
+
+.footer{
+  margin-top:40px;
+  text-align:center;
+  font-weight:bold;
+  color:#4f46e5;
+}
 </style>
 </head>
 <body>
 
 <div class="container">
-<h1>📊 Test natijalari</h1>
+<h1>📊 Test Natijalari</h1>
 
 <div class="actions" id="adminActions">
-  <button onclick="exportExcel()">📥 Excel yuklash</button>
+  <button onclick="exportExcel()">📥 Excel yuklab olish</button>
+  <button onclick="exportPDF()">📄 PDF yuklab olish</button>
 </div>
 
 <div id="summary"></div>
 
-<!-- ADMIN -->
+<!-- ADMIN BLOCK -->
 <div id="adminBlock">
   <h2>📋 Barcha natijalar</h2>
   <table>
@@ -132,7 +139,6 @@ tr:nth-child(even){
         <th>#</th>
         <th>Ism</th>
         <th>Familiya</th>
-        <th>Test ID</th>
         <th>Ball</th>
         <th>Tugagan vaqt</th>
       </tr>
@@ -141,16 +147,20 @@ tr:nth-child(even){
   </table>
 </div>
 
-<!-- STUDENT -->
+<!-- STUDENT BLOCK -->
 <div id="studentBlock" style="display:none">
   <h2>📝 Sizning javoblaringiz</h2>
   <div id="details"></div>
 </div>
 
+<div class="footer">@Ped_Life_Uz</div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <script>
-const viewer = localStorage.getItem("viewer"); // admin | student
+const viewer = localStorage.getItem("viewer");
 const results = JSON.parse(localStorage.getItem("results")) || [];
 
 const summary = document.getElementById("summary");
@@ -164,13 +174,9 @@ if(results.length === 0){
   const ball = last.ball;
 
   let cls="red", text="Attestatsiya Mock testidan o‘tmadingiz";
-  if(ball >= 80){
-    cls="blue"; text="Oliy toifa balini to‘pladingiz";
-  }else if(ball >= 70){
-    cls="yellow"; text="Birinchi toifa balini to‘pladingiz";
-  }else if(ball >= 60){
-    cls="orange"; text="Ikkinchi toifa balini to‘pladingiz";
-  }
+  if(ball >= 80){cls="blue"; text="Oliy toifa balini to‘pladingiz";}
+  else if(ball >= 70){cls="yellow"; text="Birinchi toifa balini to‘pladingiz";}
+  else if(ball >= 60){cls="orange"; text="Ikkinchi toifa balini to‘pladingiz";}
 
   summary.innerHTML = `
     <div class="summary ${cls}">
@@ -181,7 +187,6 @@ if(results.length === 0){
     </div>
   `;
 
-  /* ADMIN TABLE */
   results.forEach((r,i)=>{
     let c = r.ball >= 80 ? "high" : r.ball >= 60 ? "mid" : "low";
     rows.innerHTML += `
@@ -189,14 +194,12 @@ if(results.length === 0){
         <td>${i+1}</td>
         <td>${r.ism}</td>
         <td>${r.familiya}</td>
-        <td>${r.testId}</td>
         <td class="${c}">${r.ball}</td>
         <td>${r.endTime}</td>
       </tr>
     `;
   });
 
-  /* STUDENT DETAILS */
   last.questions.forEach((q,i)=>{
     const userAns = last.answers[i];
     const ok = userAns === q.correct;
@@ -212,33 +215,40 @@ if(results.length === 0){
 
 /* VIEW MODE */
 if(viewer === "student"){
-  document.getElementById("adminBlock").style.display = "none";
-  document.getElementById("adminActions").style.display = "none";
-  document.getElementById("studentBlock").style.display = "block";
+  document.getElementById("adminBlock").style.display="none";
+  document.getElementById("adminActions").style.display="none";
+  document.getElementById("studentBlock").style.display="block";
 }else{
-  document.getElementById("studentBlock").style.display = "none";
+  document.getElementById("studentBlock").style.display="none";
 }
-</script>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-<script>
+/* EXPORTS */
 function exportExcel(){
-  if(results.length === 0){
-    alert("Natija yo‘q");
-    return;
-  }
   const data = results.map(r=>({
     Ism:r.ism,
     Familiya:r.familiya,
-    TestID:r.testId,
     Ball:r.ball,
-    Tugagan_vaqt:r.endTime
+    Vaqt:r.endTime
   }));
-
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Natijalar");
   XLSX.writeFile(wb, "natijalar.xlsx");
+}
+
+function exportPDF(){
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF();
+  pdf.text("Test Natijalari", 14, 15);
+  let y = 25;
+  results.forEach((r,i)=>{
+    pdf.text(
+      `${i+1}. ${r.ism} ${r.familiya} — ${r.ball} ball — ${r.endTime}`,
+      14, y
+    );
+    y += 8;
+  });
+  pdf.save("natijalar.pdf");
 }
 </script>
 
