@@ -2,52 +2,150 @@
 <html lang="uz">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Testga kirish</title>
-<link rel="stylesheet" href="css/style.css">
 
 <style>
-.input{
+*{box-sizing:border-box;font-family:Arial,sans-serif}
+
+body{
+  margin:0;
+  min-height:100vh;
+  background:#eef2ff;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.card{
+  background:#fff;
   width:100%;
-  padding:12px;
-  margin-bottom:12px;
-  border-radius:8px;
-  border:1px solid #ccc;
+  max-width:420px;
+  padding:30px;
+  border-radius:20px;
+  border:2px solid #e5e7eb;
+  box-shadow:0 25px 50px rgba(0,0,0,0.15);
+}
+
+h2{
+  text-align:center;
+  margin-top:0;
+}
+
+input{
+  width:100%;
+  padding:14px;
+  margin-top:12px;
+  border-radius:12px;
+  border:2px solid #e5e7eb;
   font-size:16px;
+}
+
+button{
+  width:100%;
+  padding:14px;
+  margin-top:20px;
+  border:none;
+  border-radius:14px;
+  background:#4f46e5;
+  color:#fff;
+  font-size:16px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.info{
+  margin-top:15px;
+  text-align:center;
+  color:#374151;
+  font-size:14px;
+}
+
+.error{
+  color:#dc2626;
+  font-weight:bold;
+  text-align:center;
+  margin-top:12px;
 }
 </style>
 </head>
-
-<body class="bg-gradient">
+<body>
 
 <div class="card">
-  <h2>🧑‍🎓 Testga kirish</h2>
+  <h2>📝 Testga kirish</h2>
 
-  <input id="ism" class="input" placeholder="Ism">
-  <input id="familiya" class="input" placeholder="Familiya">
-  <input id="testId" class="input" placeholder="Test ID">
+  <input id="ism" placeholder="Ismingiz">
+  <input id="familiya" placeholder="Familiyangiz">
+  <input id="testId" placeholder="Test ID">
 
-  <button class="btn green big" onclick="startTest()">
-    TESTNI BOSHLASH
-  </button>
+  <button onclick="start()">TESTNI BOSHLASH</button>
+
+  <div class="error" id="error"></div>
+
+  <div class="info">
+    Testni boshlashdan oldin ma’lumotlaringizni tekshiring
+  </div>
 </div>
 
 <script>
-function startTest(){
+function start(){
+  error.innerText = "";
+
   const ism = document.getElementById("ism").value.trim();
   const familiya = document.getElementById("familiya").value.trim();
   const testId = document.getElementById("testId").value.trim();
 
   if(!ism || !familiya || !testId){
-    alert("Iltimos, barcha maydonlarni to‘ldiring");
+    error.innerText = "Barcha maydonlarni to‘ldiring";
     return;
   }
 
-  localStorage.setItem("currentUser", JSON.stringify({
-    ism, familiya
-  }));
+  const allTests = JSON.parse(localStorage.getItem("allTests")) || {};
+  const test = allTests[testId];
+
+  if(!test){
+    error.innerText = "Bunday Test ID topilmadi";
+    return;
+  }
+
+  /* TIME CHECK */
+  const now = new Date();
+  if(test.date){
+    const today = new Date(test.date);
+    if(now.toDateString() !== today.toDateString()){
+      error.innerText = "Test bugun uchun faol emas";
+      return;
+    }
+  }
+
+  if(test.start && test.end){
+    const [sh,sm] = test.start.split(":");
+    const [eh,em] = test.end.split(":");
+
+    const start = new Date();
+    start.setHours(sh,sm,0,0);
+
+    const end = new Date();
+    end.setHours(eh,em,0,0);
+
+    if(now < start){
+      error.innerText = "Test hali boshlanmagan";
+      return;
+    }
+    if(now > end){
+      error.innerText = "Test vaqti tugagan";
+      return;
+    }
+  }
+
+  /* SAVE USER */
+  localStorage.setItem("currentUser", JSON.stringify({ism,familiya}));
   localStorage.setItem("currentTestId", testId);
 
-  window.location.href = "test.html";
+  /* PREVENT DOUBLE START */
+  localStorage.removeItem("viewer");
+
+  location.href = "test.html";
 }
 </script>
 
