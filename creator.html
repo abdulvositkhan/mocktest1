@@ -6,89 +6,73 @@
 <title>Admin — Test yaratish</title>
 
 <style>
+*{box-sizing:border-box;font-family:Arial,sans-serif}
 body{
   margin:0;
-  font-family:Arial, sans-serif;
-  background:linear-gradient(90deg,#3b82f6,#10b981);
   min-height:100vh;
+  background:linear-gradient(135deg,#4f46e5,#22c55e);
   display:flex;
-  justify-content:center;
   align-items:center;
+  justify-content:center;
 }
 .card{
   background:#fff;
   width:100%;
   max-width:900px;
   padding:30px;
-  border-radius:20px;
-  box-shadow:0 20px 50px rgba(0,0,0,0.2);
+  border-radius:18px;
+  border:2px solid #e5e7eb;
+  box-shadow:0 25px 50px rgba(0,0,0,0.2);
 }
-h2{margin-top:0}
-input,select{
+h2,h3{margin-top:0}
+input,textarea,select{
   width:100%;
   padding:12px;
-  margin:8px 0;
-  border-radius:10px;
-  border:1px solid #d1d5db;
-  font-size:15px;
-}
-button{
-  width:100%;
-  padding:14px;
-  border:none;
-  border-radius:12px;
-  background:#4f46e5;
-  color:white;
-  font-size:16px;
-  font-weight:bold;
-  cursor:pointer;
   margin-top:10px;
+  border-radius:10px;
+  border:2px solid #e5e7eb;
 }
-button.red{background:#dc2626}
-button.green{background:#16a34a}
+textarea{resize:vertical}
 .row{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:10px;
 }
+button{
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  font-weight:bold;
+  cursor:pointer;
+  margin-top:12px;
+}
+.blue{background:#4f46e5;color:white}
+.green{background:#16a34a;color:white}
+.red{background:#dc2626;color:white}
+
 .qbox{
-  border:1.5px dashed #d1d5db;
+  border:2px dashed #d1d5db;
   padding:15px;
   border-radius:12px;
   margin-top:15px;
 }
-.test-list{
-  margin-top:20px;
-}
-.test-item{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
+.qitem{
   border:1px solid #e5e7eb;
   padding:10px;
   border-radius:10px;
-  margin-top:8px;
+  margin-top:10px;
+  background:#f9fafb;
 }
-.small-btn{
-  padding:6px 12px;
-  border-radius:8px;
-  font-size:14px;
-}
+.preview{margin-top:10px;display:none}
+.preview img{max-width:100%;border-radius:10px;border:1px solid #e5e7eb}
 </style>
 </head>
 <body>
 
 <div class="card">
+<h2>🛠 Test yaratish / tahrirlash</h2>
 
-<h2>Admin — Test yaratish</h2>
-
-<input id="testId" placeholder="Test ID (masalan: FIZ2025)">
-<select id="fan">
-  <option value="">Fan tanlang</option>
-  <option>Matematika</option>
-  <option>Fizika</option>
-  <option>Informatika</option>
-</select>
+<input id="testId" placeholder="Test ID (masalan: MAT2025)">
 
 <div class="row">
   <input type="date" id="date">
@@ -102,14 +86,29 @@ button.green{background:#16a34a}
 
 <hr>
 
-<h3>Qo‘lda savol qo‘shish</h3>
+<h3>📂 Excel orqali savol yuklash</h3>
+<input type="file" id="excelFile" accept=".xlsx">
+<button class="blue" onclick="loadExcel()">Excel yuklash</button>
+<div id="excelMsg" style="margin-top:10px;font-weight:bold"></div>
 
+<hr>
+
+<h3>✍️ Savol qo‘shish</h3>
 <div class="qbox">
-  <input id="qText" placeholder="Savol matni">
-  <input id="a" placeholder="A variant">
-  <input id="b" placeholder="B variant">
-  <input id="c" placeholder="C variant">
-  <input id="d" placeholder="D variant">
+  <textarea id="qText" rows="3" placeholder="Savol matni (√ π ≤ ≥ x²)"></textarea>
+
+  <input id="imgUrl" placeholder="Savol rasm URL" oninput="previewFromUrl()">
+  <input type="file" id="imgFile" accept="image/*" onchange="previewFromFile()">
+
+  <div class="preview" id="imgPreview">
+    <img id="previewImg">
+  </div>
+
+  <textarea id="a" rows="2" placeholder="A variant"></textarea>
+  <textarea id="b" rows="2" placeholder="B variant"></textarea>
+  <textarea id="c" rows="2" placeholder="C variant"></textarea>
+  <textarea id="d" rows="2" placeholder="D variant"></textarea>
+
   <select id="correct">
     <option value="">To‘g‘ri javob</option>
     <option>A</option>
@@ -117,94 +116,120 @@ button.green{background:#16a34a}
     <option>C</option>
     <option>D</option>
   </select>
-  <button onclick="addQuestion()">Savol qo‘shish</button>
+
+  <button class="blue" onclick="addQuestion()">Savol qo‘shish</button>
   <div id="count">Savollar: 0 / 50</div>
 </div>
 
 <button class="green" onclick="saveTest()">TESTNI SAQLASH</button>
 
 <hr>
+<h3>📋 Test savollari</h3>
+<div id="tests"></div>
 
-<h3>Mavjud testlar</h3>
-<div id="tests" class="test-list"></div>
-
+<button class="blue" onclick="
+  localStorage.setItem('viewer','admin');
+  location.href='results.html';
+">📊 Natijalar</button>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <script>
 let questions = [];
 
+/* PREVIEW */
+function previewFromUrl(){
+  if(imgUrl.value){
+    previewImg.src = imgUrl.value;
+    imgPreview.style.display="block";
+  }else imgPreview.style.display="none";
+}
+function previewFromFile(){
+  const f = imgFile.files[0];
+  if(!f) return;
+  const r = new FileReader();
+  r.onload=e=>{
+    previewImg.src=e.target.result;
+    imgPreview.style.display="block";
+  };
+  r.readAsDataURL(f);
+}
+
+/* ADD */
 function addQuestion(){
-  if(questions.length>=50){
-    alert("50 ta savol yetarli");
-    return;
-  }
-  const q = {
+  if(questions.length>=50) return alert("50 ta savol bo‘ldi");
+  if(!qText.value || !correct.value) return alert("Savol to‘liq emas");
+
+  questions.push({
     text:qText.value,
+    image:imgFile.files[0]?previewImg.src:imgUrl.value,
     options:{A:a.value,B:b.value,C:c.value,D:d.value},
     correct:correct.value
-  };
-  if(!q.text||!q.correct){
-    alert("Savol to‘liq emas");
-    return;
-  }
-  questions.push(q);
-  qText.value=a.value=b.value=c.value=d.value="";
+  });
+  clearForm();
+  renderQuestions();
+}
+
+function clearForm(){
+  qText.value=imgUrl.value=a.value=b.value=c.value=d.value="";
+  imgFile.value="";
   correct.value="";
+  imgPreview.style.display="none";
   count.innerText=`Savollar: ${questions.length} / 50`;
 }
 
+/* SAVE */
 function saveTest(){
-  const allTests = JSON.parse(localStorage.getItem("allTests")) || {};
-  allTests[testId.value]={
-    fan:fan.value,
-    date:date.value,
-    startTime:start.value,
-    endTime:end.value,
-    duration:duration.value,
-    questions:questions
-  };
-  localStorage.setItem("allTests",JSON.stringify(allTests));
+  if(!testId.value) return alert("Test ID yo‘q");
+  const all = JSON.parse(localStorage.getItem("allTests"))||{};
+  all[testId.value]={date:date.value,start:start.value,end:end.value,duration:duration.value,questions};
+  localStorage.setItem("allTests",JSON.stringify(all));
   alert("Test saqlandi");
-  showTests();
 }
 
-function showTests(){
+/* RENDER */
+function renderQuestions(){
   tests.innerHTML="";
-  const allTests = JSON.parse(localStorage.getItem("allTests")) || {};
-  for(const id in allTests){
+  questions.forEach((q,i)=>{
     tests.innerHTML+=`
-      <div class="test-item">
-        <b>${id}</b>
-        <div>
-          <button class="small-btn" onclick="editTest('${id}')">✏️</button>
-          <button class="small-btn red" onclick="deleteTest('${id}')">❌</button>
-        </div>
+      <div class="qitem">
+        <b>${i+1}. ${q.text}</b><br>
+        To‘g‘ri javob: <b>${q.correct}</b>
+        <button class="red" onclick="removeQ(${i})">❌</button>
       </div>`;
-  }
+  });
 }
-showTests();
-
-function deleteTest(id){
-  const allTests = JSON.parse(localStorage.getItem("allTests"));
-  delete allTests[id];
-  localStorage.setItem("allTests",JSON.stringify(allTests));
-  showTests();
-}
-
-function editTest(id){
-  const allTests = JSON.parse(localStorage.getItem("allTests"));
-  const t = allTests[id];
-  testId.value=id;
-  fan.value=t.fan;
-  date.value=t.date;
-  start.value=t.startTime;
-  end.value=t.endTime;
-  duration.value=t.duration;
-  questions=t.questions;
+function removeQ(i){
+  questions.splice(i,1);
+  renderQuestions();
   count.innerText=`Savollar: ${questions.length} / 50`;
-  alert("Tahrirlash rejimi yoqildi. O‘zgartirib saqlang.");
+}
+
+/* EXCEL */
+function loadExcel(){
+  const f=excelFile.files[0];
+  if(!f) return alert("Excel tanlanmadi");
+  const r=new FileReader();
+  r.onload=e=>{
+    const wb=XLSX.read(new Uint8Array(e.target.result),{type:"array"});
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+    rows.forEach((r,i)=>{
+      if(!r.Savol||!r.Togri) return;
+      if(questions.length<50)
+        questions.push({
+          text:r.Savol,
+          image:r.Rasm||"",
+          options:{A:r.A||"",B:r.B||"",C:r.C||"",D:r.D||""},
+          correct:r.Togri
+        });
+    });
+    excelMsg.innerText=`Excel yuklandi: ${questions.length} savol`;
+    renderQuestions();
+    count.innerText=`Savollar: ${questions.length} / 50`;
+  };
+  r.readAsArrayBuffer(f);
 }
 </script>
-
 </body>
 </html>
