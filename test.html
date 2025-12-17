@@ -6,203 +6,242 @@
 <title>Test topshirish</title>
 
 <style>
+*{box-sizing:border-box;font-family:Arial,sans-serif}
 body{
   margin:0;
-  font-family:Arial, sans-serif;
-  background:#ecfdf5; /* juda och yashil */
   min-height:100vh;
+  background:#ecfdf5;
   display:flex;
   justify-content:center;
   align-items:center;
 }
-
 .container{
   width:100%;
   max-width:900px;
-  background:#ffffff;
+  background:#fff;
   padding:30px;
   border-radius:20px;
-  box-shadow:0 15px 40px rgba(0,0,0,0.15);
+  border:2px solid #e5e7eb;
+  box-shadow:0 25px 50px rgba(0,0,0,0.15);
 }
-
 .timer{
-  text-align:right;
-  font-size:18px;
+  position:fixed;
+  top:20px;
+  right:20px;
+  background:#dc2626;
+  color:#fff;
+  padding:14px 20px;
+  border-radius:14px;
+  font-size:20px;
   font-weight:bold;
-  color:#dc2626;
 }
-
 .question-box{
   border:2px solid #e5e7eb;
   border-radius:16px;
   padding:25px;
   font-size:22px;
   font-weight:600;
-  margin:20px 0;
-}
-
-.option{
-  border:1.5px solid #d1d5db;
-  border-radius:12px;
-  padding:14px;
-  margin:12px 0;
-  font-size:18px;
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-
-.option:hover{
+  margin-bottom:20px;
   background:#f0fdf4;
 }
-
+.question-box img{
+  max-width:100%;
+  margin-top:15px;
+  border-radius:12px;
+}
+.option{
+  border:2px solid #e5e7eb;
+  border-radius:12px;
+  padding:14px;
+  margin-top:12px;
+  cursor:pointer;
+  font-size:18px;
+}
+.option.selected{
+  background:#dbeafe;
+  border-color:#2563eb;
+}
 .nav{
   display:flex;
   justify-content:space-between;
   margin-top:25px;
 }
-
 button{
-  padding:14px 26px;
-  border:none;
-  border-radius:12px;
-  background:#4f46e5;
-  color:white;
+  padding:14px 24px;
   font-size:16px;
   font-weight:bold;
+  border:none;
+  border-radius:12px;
   cursor:pointer;
+  background:#4f46e5;
+  color:white;
 }
-
 .finish{
   width:100%;
   margin-top:25px;
   background:#16a34a;
 }
-
-.result{
-  text-align:center;
-  font-size:30px;
-  font-weight:bold;
-  padding:40px;
-  border-radius:20px;
-  margin-top:20px;
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.45);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:999;
 }
-
-.red{background:#fee2e2;color:#991b1b}
-.orange{background:#ffedd5;color:#9a3412}
-.yellow{background:#fef9c3;color:#854d0e}
-.blue{background:#dbeafe;color:#1e3a8a}
+.modal-box{
+  background:#fff;
+  padding:30px;
+  border-radius:18px;
+  width:100%;
+  max-width:420px;
+  text-align:center;
+  box-shadow:0 25px 50px rgba(0,0,0,0.25);
+}
+.modal-box .score{
+  font-size:36px;
+  font-weight:bold;
+  margin:12px 0;
+}
 </style>
 </head>
 <body>
 
+<div class="timer" id="timer"></div>
+
 <div class="container">
+  <div class="question-box" id="qBox"></div>
+  <div id="options"></div>
 
-  <div class="timer" id="timer"></div>
-
-  <div id="testArea">
-    <div class="question-box" id="questionText"></div>
-    <div id="options"></div>
-
-    <div class="nav">
-      <button onclick="prevQuestion()">⬅ Oldingi</button>
-      <button onclick="nextQuestion()">Keyingi ➡</button>
-    </div>
-
-    <button class="finish" onclick="finishTest()">TESTNI YAKUNLASH</button>
+  <div class="nav">
+    <button onclick="prev()">⬅ Oldingi</button>
+    <button onclick="next()">Keyingi ➡</button>
   </div>
 
-  <div id="resultArea"></div>
+  <button class="finish" id="finishBtn" onclick="finish()" style="display:none">
+    TESTNI YAKUNLASH
+  </button>
+</div>
 
+<div class="modal" id="resultModal">
+  <div class="modal-box">
+    <h2 id="resultTitle"></h2>
+    <div class="score" id="resultScore"></div>
+    <div id="resultInfo"></div>
+    <button onclick="goResult()">Davom etish</button>
+  </div>
 </div>
 
 <script>
-// === MA'LUMOTLAR ===
 const testId = localStorage.getItem("currentTestId");
+const user = JSON.parse(localStorage.getItem("currentUser"));
 const allTests = JSON.parse(localStorage.getItem("allTests")) || {};
 const test = allTests[testId];
 
-if(!test){
+if(!test || !user){
   alert("Test topilmadi");
-  location.href="taker.html";
+  location.href="index.html";
 }
 
-let current = 0;
+let index = 0;
 let answers = {};
-let timeLeft = test.duration * 60;
+let timeLeft = Number(test.duration) * 60;
+let isFinished = false;
+let finalResult = null;
 
-// === TIMER ===
-const timerEl = document.getElementById("timer");
-setInterval(()=>{
-  const m = Math.floor(timeLeft / 60);
+const timerInterval = setInterval(()=>{
+  const m = Math.floor(timeLeft/60);
   const s = timeLeft % 60;
-  timerEl.innerText = `⏱ ${m}:${String(s).padStart(2,"0")}`;
+  timer.innerText = `⏱ ${m}:${String(s).padStart(2,"0")}`;
   timeLeft--;
-  if(timeLeft < 0) finishTest();
+  if(timeLeft < 0){
+    clearInterval(timerInterval);
+    finish();
+  }
 },1000);
 
-// === SAVOL CHIQARISH ===
-function renderQuestion(){
-  const q = test.questions[current];
-  document.getElementById("questionText").innerText =
-    `${current+1}. ${q.text}`;
-
-  const optDiv = document.getElementById("options");
-  optDiv.innerHTML = "";
-
-  for(const key in q.options){
-    optDiv.innerHTML += `
-      <label class="option">
-        <input type="radio" name="option" value="${key}"
-          ${answers[current]===key?"checked":""}>
-        ${key}) ${q.options[key]}
-      </label>
-    `;
+function render(){
+  const q = test.questions[index];
+  qBox.innerHTML = `
+    ${index+1}. ${q.text}
+    ${q.image ? `<img src="${q.image}">` : ""}
+  `;
+  options.innerHTML = "";
+  for(const k in q.options){
+    const sel = answers[index] === k ? "selected" : "";
+    options.innerHTML += `
+      <div class="option ${sel}" onclick="choose('${k}')">
+        ${k}) ${q.options[k]}
+      </div>`;
   }
-
-  document.querySelectorAll("input[name=option]").forEach(r=>{
-    r.onchange = () => answers[current] = r.value;
-  });
+  finishBtn.style.display =
+    index === test.questions.length-1 ? "block" : "none";
 }
-renderQuestion();
+render();
 
-function nextQuestion(){
-  if(current < test.questions.length-1){
-    current++;
-    renderQuestion();
+function choose(v){
+  answers[index] = v;
+  render();
+}
+function next(){
+  if(index < test.questions.length-1){
+    index++;
+    render();
   }
 }
-
-function prevQuestion(){
-  if(current > 0){
-    current--;
-    renderQuestion();
+function prev(){
+  if(index > 0){
+    index--;
+    render();
   }
 }
 
-// === TESTNI YAKUNLASH ===
-function finishTest(){
+function finish(){
+  if(isFinished) return;
+  isFinished = true;
+  clearInterval(timerInterval);
+
   let correct = 0;
   test.questions.forEach((q,i)=>{
     if(answers[i] === q.correct) correct++;
   });
 
-  const score = correct * 2;
-  let title="O‘tilmadi", cls="red";
+  const wrong = test.questions.length - correct;
+  const ball = correct * 2;
+  const endTime = new Date().toLocaleString();
 
-  if(score>=80){title="Oliy toifa";cls="blue";}
-  else if(score>=70){title="Birinchi toifa";cls="yellow";}
-  else if(score>=60){title="Ikkinchi toifa";cls="orange";}
+  let title = "❌ Attestatsiya Mock testidan o‘tmadingiz";
+  if(ball >= 80) title = "🔵 Oliy toifa balini to‘pladingiz";
+  else if(ball >= 70) title = "🟡 Birinchi toifa balini to‘pladingiz";
+  else if(ball >= 60) title = "🟠 Ikkinchi toifa balini to‘pladingiz";
 
-  document.getElementById("testArea").style.display="none";
+  finalResult = {
+    ism:user.ism,
+    familiya:user.familiya,
+    testId,
+    ball,
+    answers,
+    questions:test.questions,
+    endTime
+  };
 
-  document.getElementById("resultArea").innerHTML = `
-    <div class="result ${cls}">
-      ${score}/100<br>
-      ${title}
-    </div>
+  resultTitle.innerText = title;
+  resultScore.innerText = `${ball}/100`;
+  resultInfo.innerHTML = `
+    ✅ To‘g‘ri: <b>${correct}</b><br>
+    ❌ Noto‘g‘ri: <b>${wrong}</b>
   `;
+
+  localStorage.setItem("viewer","student");
+  resultModal.style.display="flex";
+}
+
+function goResult(){
+  const results = JSON.parse(localStorage.getItem("results")) || [];
+  results.push(finalResult);
+  localStorage.setItem("results", JSON.stringify(results));
+  location.href="results.html";
 }
 </script>
 
