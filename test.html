@@ -194,19 +194,30 @@ function startTimer(){
 
 /* RENDER */
 function render(){
- const order = ["A", "B", "C", "D"];
-optionsBox.innerHTML = order.map(k => `
-  <div class="option">
-    <input type="radio" name="answer" value="${k}">
-    <label>${k}) ${question.options[k]}</label>
+  const q = test.questions[index];
+  if(!q || !q.options) return; // ❗ himoya
 
+  qBox.innerHTML = `
+    ${index + 1}. ${q.text}
+    ${q.image ? `<img src="${q.image}">` : ""}
+  `;
+
+  options.innerHTML = "";
+
+  const order = ["A", "B", "C", "D"]; // ❗ doimiy tartib
+
+  for(const k of order){
+    if(!q.options[k]) continue; // ❗ himoya
+
+    const sel = answers[index] === k ? "selected" : "";
+
+    options.innerHTML += `
+      <div class="option ${sel}" onclick="choose('${k}')">
+        ${k}) ${q.options[k]}
+      </div>
+    `;
   }
-  finishBtn.style.display=index===test.questions.length-1?"block":"none";
 }
-
-function choose(v){selected[index]=v;render();}
-function next(){if(index<test.questions.length-1){index++;render();}}
-function prev(){if(index>0){index--;render();}}
 
 /* FINISH */
 function finish(){
@@ -263,6 +274,7 @@ async function goResult(){
 
 </body>
 </html>
+
 
 
 
