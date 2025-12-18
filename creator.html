@@ -22,6 +22,7 @@ button{padding:12px 18px;font-weight:bold;border:none;border-radius:10px;cursor:
 .preview{display:none;margin-top:10px}
 .preview img{max-width:100%;border-radius:10px}
 .footer{text-align:center;margin-top:40px;color:#6b7280;font-weight:bold}
+.actions{display:flex;gap:10px;justify-content:center;margin-top:20px}
 </style>
 </head>
 <body>
@@ -60,7 +61,14 @@ if(sessionStorage.getItem("adminAuth")!=="true"){
 
 <div class="qbox">
 <textarea id="qText" rows="3" placeholder="Savol matni"></textarea>
-<input id="imgUrl" placeholder="Rasm URL">
+
+<input id="imgUrl" placeholder="Rasm URL (ixtiyoriy)">
+<input type="file" id="imgFile" accept="image/*" onchange="previewImage()">
+
+<div class="preview" id="imgPreview">
+  <img id="previewImg">
+</div>
+
 <textarea id="a" rows="2" placeholder="A variant"></textarea>
 <textarea id="b" rows="2" placeholder="B variant"></textarea>
 <textarea id="c" rows="2" placeholder="C variant"></textarea>
@@ -80,7 +88,10 @@ if(sessionStorage.getItem("adminAuth")!=="true"){
 <h2>📋 Savollar</h2>
 <div id="questionList"></div>
 
-<button class="green" onclick="saveTest()">💾 TESTNI SAQLASH</button>
+<div class="actions">
+  <button class="green" onclick="saveTest()">💾 TESTNI SAQLASH</button>
+  <button class="blue" onclick="location.href='results.html'">📊 Natijalarni ko‘rish</button>
+</div>
 
 <hr>
 
@@ -93,41 +104,57 @@ if(sessionStorage.getItem("adminAuth")!=="true"){
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <script>
-/* 🔥 FIREBASE CONFIG — O‘ZINGIZNIKI */
-const firebaseConfig = {
-  apiKey: "AIzaSyDMyRSvTXXxkgTPyeZSeVnpHgh1tH4lJjE",
-  authDomain: "mock-8b900.firebaseapp.com",
-  projectId: "mock-8b900",
-  storageBucket: "mock-8b900.appspot.com",
-  messagingSenderId: "316652697568",
-  appId: "1:316652697568:web:7b6b24a3aefc44dcd1dd85"
+const firebaseConfig={
+  apiKey:"AIzaSyDMyRSvTXXxkgTPyeZSeVnpHgh1tH4lJjE",
+  authDomain:"mock-8b900.firebaseapp.com",
+  projectId:"mock-8b900",
+  storageBucket:"mock-8b900.appspot.com",
+  messagingSenderId:"316652697568",
+  appId:"1:316652697568:web:7b6b24a3aefc44dcd1dd85"
 };
-
-
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const db=firebase.firestore();
+const storage=firebase.storage();
 
-/* ===== LOGIKA ===== */
 let questions=[], editIndex=null;
 
+/* IMAGE PREVIEW */
+function previewImage(){
+  const f=imgFile.files[0];
+  if(!f) return;
+  const r=new FileReader();
+  r.onload=e=>{
+    previewImg.src=e.target.result;
+    imgPreview.style.display="block";
+  };
+  r.readAsDataURL(f);
+}
+
 /* SAVE QUESTION */
-function saveQuestion(){
+async function saveQuestion(){
   if(!qText.value||!correct.value) return alert("Savol to‘liq emas");
   if(editIndex===null && questions.length>=50) return alert("50 ta savol bo‘ldi");
 
-  const obj={
-    text:qText.value,
-    image:imgUrl.value,
-    options:{A:a.value,B:b.value,C:c.value,D:d.value},
-    correct:correct.value
-  };
+  let image="";
+  if(imgFile.files[0]){
+    const ref=storage.ref("questions/"+Date.now()+"_"+imgFile.files[0].name);
+    await ref.put(imgFile.files[0]);
+    image=await ref.getDownloadURL();
+  }else if(imgUrl.value){
+    image=imgUrl.value;
+  }
 
-  editIndex===null ? questions.push(obj) : questions[editIndex]=obj;
+  const obj={text:qText.value,image,options:{A:a.value,B:b.value,C:c.value,D:d.value},correct:correct.value};
+
+  editIndex===null?questions.push(obj):questions[editIndex]=obj;
   editIndex=null;
   qText.value=imgUrl.value=a.value=b.value=c.value=d.value="";
+  imgFile.value="";
+  imgPreview.style.display="none";
   correct.value="";
   render();
 }
@@ -139,11 +166,10 @@ function render(){
     questionList.innerHTML+=`
       <div class="qitem">
         <b>${i+1}. ${q.text}</b><br>
-        To‘g‘ri: ${q.correct}
-        <div>
-          <button onclick="editQ(${i})">✏️</button>
-          <button class="red" onclick="delQ(${i})">❌</button>
-        </div>
+        ${q.image?`<img src="${q.image}" style="max-width:200px;margin-top:8px">`:""}
+        <div>To‘g‘ri: ${q.correct}</div>
+        <button onclick="editQ(${i})">✏️</button>
+        <button class="red" onclick="delQ(${i})">❌</button>
       </div>`;
   });
   count.innerText=`Savollar: ${questions.length} / 50`;
@@ -154,29 +180,23 @@ function editQ(i){
   editIndex=i;
   qText.value=q.text;
   imgUrl.value=q.image;
-  a.value=q.options.A;
-  b.value=q.options.B;
-  c.value=q.options.C;
-  d.value=q.options.D;
+  a.value=q.options.A;b.value=q.options.B;c.value=q.options.C;d.value=q.options.D;
   correct.value=q.correct;
+  if(q.image){previewImg.src=q.image;imgPreview.style.display="block";}
 }
 function delQ(i){questions.splice(i,1);render();}
 
-/* SAVE TEST → SERVER */
+/* SAVE TEST */
 async function saveTest(){
   if(!testId.value) return alert("Test ID yo‘q");
   await db.collection("tests").doc(testId.value).set({
-    date:date.value,
-    start:start.value,
-    end:end.value,
-    duration:duration.value,
-    questions
+    date:date.value,start:start.value,end:end.value,duration:duration.value,questions
   });
   alert("Test serverga saqlandi");
   loadSavedTests();
 }
 
-/* LOAD SAVED TESTS */
+/* LOAD SAVED */
 async function loadSavedTests(){
   savedTests.innerHTML="";
   const snap=await db.collection("tests").get();
@@ -190,29 +210,23 @@ async function loadSavedTests(){
       </div>`;
   });
 }
-
 async function loadTest(id){
   const d=await db.collection("tests").doc(id).get();
   const t=d.data();
   testId.value=id;
-  date.value=t.date||"";
-  start.value=t.start||"";
-  end.value=t.end||"";
-  duration.value=t.duration||"";
+  date.value=t.date||"";start.value=t.start||"";end.value=t.end||"";duration.value=t.duration||"";
   questions=t.questions||[];
   render();
 }
-
 async function deleteTest(id){
-  if(!confirm("Test o‘chirilsinmi?")) return;
+  if(!confirm("Test o‘chirilsinmi?"))return;
   await db.collection("tests").doc(id).delete();
   loadSavedTests();
 }
 
 /* EXCEL */
 function loadExcel(){
-  const f=excelFile.files[0];
-  if(!f) return;
+  const f=excelFile.files[0]; if(!f) return;
   const r=new FileReader();
   r.onload=e=>{
     const wb=XLSX.read(new Uint8Array(e.target.result),{type:"array"});
@@ -220,12 +234,7 @@ function loadExcel(){
     rows.forEach(row=>{
       const c=(row.Togri||"").toUpperCase();
       if(row.Savol&&["A","B","C","D"].includes(c)&&questions.length<50){
-        questions.push({
-          text:row.Savol,
-          image:row.Rasm||"",
-          options:{A:row.A||"",B:row.B||"",C:row.C||"",D:row.D||""},
-          correct:c
-        });
+        questions.push({text:row.Savol,image:row.Rasm||"",options:{A:row.A||"",B:row.B||"",C:row.C||"",D:row.D||""},correct:c});
       }
     });
     render();
@@ -237,4 +246,3 @@ loadSavedTests();
 </script>
 </body>
 </html>
-
