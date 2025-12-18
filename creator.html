@@ -228,7 +228,6 @@ function render(){
   });
   count.innerText=`Savollar: ${questions.length} / 50`;
 }
-
 function editQ(i){
   const q=questions[i];
   editIndex=i;
@@ -239,11 +238,15 @@ function editQ(i){
   c.value=q.options.C;
   d.value=q.options.D;
   correct.value=q.correct;
+
+  imgFile.value = "";          // ✅ MUHIM: eski file state tozalanadi
+
   if(q.image){
     previewImg.src=q.image;
     imgPreview.style.display="block";
   }
 }
+
 
 function delQ(i){
   if(confirm("Savol o‘chirilsinmi?")){
@@ -329,3 +332,4 @@ loadSavedTests();
 
 </body>
 </html>
+
