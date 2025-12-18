@@ -7,18 +7,57 @@
 
 <style>
 *{box-sizing:border-box;font-family:Inter,Arial,sans-serif}
-body{margin:0;min-height:100vh;background:#f0fdf4;display:flex;justify-content:center;padding:30px}
-.container{width:100%;max-width:1200px;background:#fff;padding:30px;border-radius:22px;border:1px solid #e5e7eb;box-shadow:0 30px 60px rgba(0,0,0,.12)}
-h1,h2{text-align:center;margin-top:0}
-input,textarea,select{width:100%;padding:12px;margin-top:10px;border-radius:12px;border:1.8px solid #e5e7eb;font-size:15px}
+body{
+  margin:0;
+  min-height:100vh;
+  background:#f0fdf4;
+  display:flex;
+  justify-content:center;
+  padding:30px
+}
+.container{
+  width:100%;
+  max-width:1200px;
+  background:#fff;
+  padding:30px;
+  border-radius:22px;
+  border:1px solid #e5e7eb;
+  box-shadow:0 30px 60px rgba(0,0,0,.12)
+}
+h1,h2{margin-top:0;text-align:center}
+input,textarea,select{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border-radius:12px;
+  border:1.8px solid #e5e7eb;
+  font-size:15px
+}
 textarea{resize:vertical}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-button{padding:12px 20px;border:none;border-radius:12px;font-weight:600;cursor:pointer}
+button{
+  padding:12px 20px;
+  border:none;
+  border-radius:12px;
+  font-weight:600;
+  cursor:pointer
+}
 .blue{background:#4f46e5;color:#fff}
 .green{background:#16a34a;color:#fff}
 .red{background:#dc2626;color:#fff}
-.qbox{border:2px dashed #d1d5db;padding:20px;border-radius:18px;margin-top:20px}
-.qitem{border:1px solid #e5e7eb;padding:15px;border-radius:16px;margin-top:15px;background:#f9fafb}
+.qbox{
+  border:2px dashed #d1d5db;
+  padding:20px;
+  border-radius:18px;
+  margin-top:20px
+}
+.qitem{
+  border:1px solid #e5e7eb;
+  padding:15px;
+  border-radius:16px;
+  margin-top:15px;
+  background:#f9fafb
+}
 .preview{display:none;margin-top:12px}
 .preview img{max-width:220px;border-radius:12px}
 .actions{display:flex;gap:12px;justify-content:center;margin-top:25px}
@@ -32,12 +71,14 @@ button{padding:12px 20px;border:none;border-radius:12px;font-weight:600;cursor:p
 if(sessionStorage.getItem("adminAuth")!=="true"){
   location.href="admin-login.html";
 }
+sessionStorage.setItem("viewer","admin");
 </script>
 
 <div class="container">
+
 <h1>🛠 Admin Panel — Test yaratish</h1>
 
-<input id="testId" placeholder="Test ID">
+<input id="testId" placeholder="Test ID (masalan: MAT2025)">
 
 <div class="row">
   <input type="date" id="date">
@@ -51,11 +92,20 @@ if(sessionStorage.getItem("adminAuth")!=="true"){
 
 <hr>
 
+<h2>📂 Excel orqali savol yuklash</h2>
+<input type="file" id="excelFile" accept=".xlsx">
+<button class="blue" onclick="loadExcel()">Excel yuklash</button>
+<div id="excelMsg"></div>
+
+<hr>
+
 <h2>✍️ Savol qo‘shish / tahrirlash</h2>
 
 <div class="qbox">
+
 <textarea id="qText" rows="3" placeholder="Savol matni"></textarea>
 
+<input id="imgUrl" placeholder="Rasm URL (ixtiyoriy)">
 <input type="file" id="imgFile" accept="image/*" onchange="previewImage()">
 
 <div class="preview" id="imgPreview">
@@ -77,23 +127,31 @@ if(sessionStorage.getItem("adminAuth")!=="true"){
 
 <button class="blue" onclick="saveQuestion()">Saqlash</button>
 <div id="count">Savollar: 0 / 50</div>
+
 </div>
 
 <hr>
+
 <h2>📋 Savollar ro‘yxati</h2>
 <div id="questionList"></div>
 
 <div class="actions">
   <button class="green" onclick="saveTest()">💾 TESTNI SAQLASH</button>
+  <button class="blue" onclick="location.href='results.html'">📊 Natijalarni ko‘rish</button>
 </div>
+
+<hr>
+
+<h2>📚 Saqlangan testlar</h2>
+<div id="savedTests"></div>
 
 <div class="footer">@Ped_Life_Uz</div>
 </div>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <script>
 firebase.initializeApp({
@@ -108,10 +166,8 @@ firebase.initializeApp({
 const db = firebase.firestore();
 const storage = firebase.storage();
 
-let questions = [];
-let editIndex = null;
+let questions = [], editIndex = null;
 
-/* PREVIEW */
 function previewImage(){
   const f = imgFile.files[0];
   if(!f) return;
@@ -123,19 +179,21 @@ function previewImage(){
   r.readAsDataURL(f);
 }
 
-/* SAVE QUESTION */
+/* ✅ FAqat shu funksiya tuzatildi */
 async function saveQuestion(){
-  if(!qText.value || !correct.value){
-    alert("Savol to‘liq emas");
-    return;
-  }
+  if(!qText.value || !correct.value) return alert("Savol to‘liq emas");
+  if(editIndex===null && questions.length>=50) return alert("50 ta savol bo‘ldi");
 
   let image = editIndex !== null ? questions[editIndex].image : "";
 
   if(imgFile.files[0]){
-    const ref = storage.ref("questions/"+Date.now()+"_"+imgFile.files[0].name);
+    const ref = storage.ref(
+      "questions/" + Date.now() + "_" + imgFile.files[0].name
+    );
     await ref.put(imgFile.files[0]);
     image = await ref.getDownloadURL();
+  } else if(imgUrl.value){
+    image = imgUrl.value.trim();
   }
 
   const q = {
@@ -145,49 +203,44 @@ async function saveQuestion(){
     correct: correct.value
   };
 
-  if(editIndex === null){
-    questions.push(q);
-  }else{
-    questions[editIndex] = q;
-    editIndex = null;
-  }
+  editIndex===null ? questions.push(q) : questions[editIndex]=q;
+  editIndex=null;
 
-  qText.value = a.value = b.value = c.value = d.value = "";
+  qText.value = imgUrl.value = a.value = b.value = c.value = d.value = "";
   imgFile.value = "";
   correct.value = "";
-  imgPreview.style.display = "none";
+  imgPreview.style.display="none";
 
   render();
 }
 
-/* RENDER */
 function render(){
   questionList.innerHTML="";
   questions.forEach((q,i)=>{
-    questionList.innerHTML += `
+    questionList.innerHTML+=`
       <div class="qitem">
         <b>${i+1}. ${q.text}</b><br>
-        ${q.image ? `<img src="${q.image}" style="max-width:200px">` : ""}
+        ${q.image?`<img src="${q.image}" style="max-width:200px;margin-top:8px">`:""}
         <div><b>To‘g‘ri:</b> ${q.correct}</div>
         <button onclick="editQ(${i})">✏️</button>
         <button class="red" onclick="delQ(${i})">❌</button>
       </div>`;
   });
-  count.innerText = `Savollar: ${questions.length} / 50`;
+  count.innerText=`Savollar: ${questions.length} / 50`;
 }
 
 function editQ(i){
-  const q = questions[i];
-  editIndex = i;
-  qText.value = q.text;
-  a.value = q.options.A;
-  b.value = q.options.B;
-  c.value = q.options.C;
-  d.value = q.options.D;
-  correct.value = q.correct;
-
+  const q=questions[i];
+  editIndex=i;
+  qText.value=q.text;
+  imgUrl.value=q.image||"";
+  a.value=q.options.A;
+  b.value=q.options.B;
+  c.value=q.options.C;
+  d.value=q.options.D;
+  correct.value=q.correct;
   if(q.image){
-    previewImg.src = q.image;
+    previewImg.src=q.image;
     imgPreview.style.display="block";
   }
 }
@@ -208,8 +261,71 @@ async function saveTest(){
     duration:duration.value,
     questions
   });
-  alert("✅ Test saqlandi");
+  alert("✅ Test serverga saqlandi");
+  loadSavedTests();
 }
+
+async function loadSavedTests(){
+  savedTests.innerHTML="";
+  const snap=await db.collection("tests").get();
+  if(snap.empty){
+    savedTests.innerHTML="<i>Test yo‘q</i>";
+    return;
+  }
+  snap.forEach(d=>{
+    savedTests.innerHTML+=`
+      <div class="qitem">
+        <b>${d.id}</b>
+        <button onclick="loadTest('${d.id}')">✏️</button>
+        <button class="red" onclick="deleteTest('${d.id}')">❌</button>
+      </div>`;
+  });
+}
+
+async function loadTest(id){
+  const d=await db.collection("tests").doc(id).get();
+  const t=d.data();
+  testId.value=id;
+  date.value=t.date||"";
+  start.value=t.start||"";
+  end.value=t.end||"";
+  duration.value=t.duration||"";
+  questions=t.questions||[];
+  render();
+}
+
+async function deleteTest(id){
+  if(!confirm("Test o‘chirilsinmi?")) return;
+  await db.collection("tests").doc(id).delete();
+  loadSavedTests();
+}
+
+function loadExcel(){
+  const f=excelFile.files[0];
+  if(!f) return;
+  const r=new FileReader();
+  r.onload=e=>{
+    const wb=XLSX.read(new Uint8Array(e.target.result),{type:"array"});
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+    rows.forEach(row=>{
+      const c=(row.Togri||"").toUpperCase();
+      if(row.Savol && ["A","B","C","D"].includes(c) && questions.length<50){
+        questions.push({
+          text:row.Savol,
+          image:row.Rasm||"",
+          options:{A:row.A||"",B:row.B||"",C:row.C||"",D:row.D||""},
+          correct:c
+        });
+      }
+    });
+    render();
+    excelMsg.innerText="✅ Excel yuklandi";
+  };
+  r.readAsArrayBuffer(f);
+}
+
+loadSavedTests();
 </script>
+
 </body>
 </html>
