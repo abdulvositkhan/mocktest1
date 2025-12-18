@@ -202,8 +202,6 @@ optionsBox.innerHTML = order.map(k => `
     <label>${k}) ${question.options[k]}</label>
   </div>
 `).join("");
-
-      </div>`;
   }
   finishBtn.style.display=index===test.questions.length-1?"block":"none";
 }
@@ -267,5 +265,6 @@ async function goResult(){
 
 </body>
 </html>
+
 
 
