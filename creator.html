@@ -7,7 +7,6 @@
 
 <style>
 *{box-sizing:border-box;font-family:Arial,sans-serif}
-
 body{
   margin:0;
   min-height:100vh;
@@ -16,7 +15,6 @@ body{
   justify-content:center;
   padding:30px;
 }
-
 .container{
   width:100%;
   max-width:1100px;
@@ -26,9 +24,7 @@ body{
   border:2px solid #e5e7eb;
   box-shadow:0 25px 50px rgba(0,0,0,0.15);
 }
-
 h1,h2{margin-top:0;text-align:center}
-
 input,textarea,select{
   width:100%;
   padding:12px;
@@ -36,15 +32,8 @@ input,textarea,select{
   border-radius:10px;
   border:2px solid #e5e7eb;
 }
-
 textarea{resize:vertical}
-
-.row{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-}
-
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 button{
   padding:12px 18px;
   font-weight:bold;
@@ -52,29 +41,24 @@ button{
   border-radius:10px;
   cursor:pointer;
 }
-
 .blue{background:#4f46e5;color:white}
 .green{background:#16a34a;color:white}
 .red{background:#dc2626;color:white}
-
 .qbox{
   border:2px dashed #d1d5db;
   padding:15px;
   border-radius:14px;
   margin-top:15px;
 }
-
 .qitem{
   border:1px solid #e5e7eb;
-  padding:10px;
+  padding:12px;
   border-radius:12px;
   margin-top:10px;
   background:#f9fafb;
 }
-
 .preview{display:none;margin-top:10px}
 .preview img{max-width:100%;border-radius:10px}
-
 .footer{
   margin-top:40px;
   text-align:center;
@@ -86,9 +70,9 @@ button{
 <body>
 
 <script>
-/* ===== ADMIN PROTECTION ===== */
-if(localStorage.getItem("adminAuth") !== "true"){
-  location.href = "admin-login.html";
+/* ADMIN HIMOYASI */
+if(localStorage.getItem("adminAuth")!=="true"){
+  location.href="admin-login.html";
 }
 </script>
 
@@ -117,9 +101,8 @@ if(localStorage.getItem("adminAuth") !== "true"){
 <hr>
 
 <h2>✍️ Savol qo‘shish / tahrirlash</h2>
-
 <div class="qbox">
-  <textarea id="qText" rows="3" placeholder="Savol matni (√ π ≤ ≥ x²)"></textarea>
+  <textarea id="qText" rows="3" placeholder="Savol matni"></textarea>
 
   <input id="imgUrl" placeholder="Rasm URL" oninput="previewUrl()">
   <input type="file" id="imgFile" accept="image/*" onchange="previewFile()">
@@ -143,37 +126,35 @@ if(localStorage.getItem("adminAuth") !== "true"){
   <div id="count">Savollar: 0 / 50</div>
 </div>
 
-<button class="green" onclick="saveTest()">TESTNI SAQLASH</button>
-
 <hr>
 
-<h2>📋 Savollar</h2>
+<h2>📋 Savollar ro‘yxati</h2>
 <div id="list"></div>
 
-<div class="footer">
-  @Ped_Life_Uz
-</div>
+<button class="green" onclick="saveTest()">💾 TESTNI SAQLASH</button>
+
+<div class="footer">@Ped_Life_Uz</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <script>
-let questions = [];
-let editIndex = null;
+let questions=[];
+let editIndex=null;
 
-/* IMAGE PREVIEW */
+/* PREVIEW */
 function previewUrl(){
   if(imgUrl.value){
-    previewImg.src = imgUrl.value;
+    previewImg.src=imgUrl.value;
     imgPreview.style.display="block";
   }else imgPreview.style.display="none";
 }
 function previewFile(){
-  const f = imgFile.files[0];
+  const f=imgFile.files[0];
   if(!f) return;
-  const r = new FileReader();
-  r.onload = e=>{
-    previewImg.src = e.target.result;
+  const r=new FileReader();
+  r.onload=e=>{
+    previewImg.src=e.target.result;
     imgPreview.style.display="block";
   };
   r.readAsDataURL(f);
@@ -186,41 +167,60 @@ function saveQuestion(){
     return;
   }
 
-  const obj = {
+  const obj={
     text:qText.value,
     image:imgFile.files[0]?previewImg.src:imgUrl.value,
     options:{A:a.value,B:b.value,C:c.value,D:d.value},
     correct:correct.value
   };
 
-  if(editIndex === null){
-    if(questions.length >= 50){
-      alert("50 ta savol bo‘ldi");
-      return;
-    }
+  if(editIndex===null){
+    if(questions.length>=50) return alert("50 ta savol bo‘ldi");
     questions.push(obj);
   }else{
-    questions[editIndex] = obj;
-    editIndex = null;
+    questions[editIndex]=obj;
+    editIndex=null;
   }
 
   clearForm();
   render();
 }
 
+/* RENDER */
+function render(){
+  list.innerHTML="";
+  questions.forEach((q,i)=>{
+    list.innerHTML+=`
+      <div class="qitem">
+        <b>${i+1}. ${q.text}</b><br>
+        A) ${q.options.A}<br>
+        B) ${q.options.B}<br>
+        C) ${q.options.C}<br>
+        D) ${q.options.D}<br>
+        <b>To‘g‘ri:</b> ${q.correct}
+        <div>
+          <button onclick="editQ(${i})">✏️</button>
+          <button class="red" onclick="removeQ(${i})">❌</button>
+        </div>
+      </div>
+    `;
+  });
+  count.innerText=`Savollar: ${questions.length} / 50`;
+}
+
 /* EDIT */
 function editQ(i){
-  const q = questions[i];
-  editIndex = i;
-  qText.value = q.text;
-  imgUrl.value = q.image;
-  a.value = q.options.A;
-  b.value = q.options.B;
-  c.value = q.options.C;
-  d.value = q.options.D;
-  correct.value = q.correct;
+  const q=questions[i];
+  editIndex=i;
+  qText.value=q.text;
+  imgUrl.value=q.image||"";
+  a.value=q.options.A;
+  b.value=q.options.B;
+  c.value=q.options.C;
+  d.value=q.options.D;
+  correct.value=q.correct;
   if(q.image){
-    previewImg.src = q.image;
+    previewImg.src=q.image;
     imgPreview.style.display="block";
   }
 }
@@ -233,73 +233,46 @@ function removeQ(i){
 
 /* CLEAR */
 function cancelEdit(){
-  editIndex = null;
+  editIndex=null;
   clearForm();
 }
-
 function clearForm(){
-  qText.value = imgUrl.value = a.value = b.value = c.value = d.value = "";
-  imgFile.value = "";
-  correct.value = "";
+  qText.value=imgUrl.value=a.value=b.value=c.value=d.value="";
+  imgFile.value="";
+  correct.value="";
   imgPreview.style.display="none";
-  count.innerText = `Savollar: ${questions.length} / 50`;
-}
-
-/* RENDER */
-function render(){
-  list.innerHTML = "";
-  questions.forEach((q,i)=>{
-    list.innerHTML += `
-      <div class="qitem">
-        <b>${i+1}. ${q.text}</b><br>
-        <button onclick="editQ(${i})">✏️</button>
-        <button class="red" onclick="removeQ(${i})">❌</button>
-      </div>`;
-  });
-  count.innerText = `Savollar: ${questions.length} / 50`;
 }
 
 /* SAVE TEST */
 function saveTest(){
-  if(!testId.value){
-    alert("Test ID kiritilmadi");
-    return;
-  }
-  const all = JSON.parse(localStorage.getItem("allTests")) || {};
-  all[testId.value] = {
-    date:date.value,
-    start:start.value,
-    end:end.value,
-    duration:duration.value,
-    questions
-  };
-  localStorage.setItem("allTests", JSON.stringify(all));
-  alert("Test muvaffaqiyatli saqlandi");
+  if(!testId.value) return alert("Test ID kiritilmadi");
+  const all=JSON.parse(localStorage.getItem("allTests"))||{};
+  all[testId.value]={date:date.value,start:start.value,end:end.value,duration:duration.value,questions};
+  localStorage.setItem("allTests",JSON.stringify(all));
+  alert("Test saqlandi");
 }
 
-/* EXCEL LOAD */
+/* EXCEL */
 function loadExcel(){
-  const f = excelFile.files[0];
-  if(!f){
-    alert("Excel tanlanmadi");
-    return;
-  }
-  const r = new FileReader();
-  r.onload = e=>{
-    const wb = XLSX.read(new Uint8Array(e.target.result), {type:"array"});
-    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+  const f=excelFile.files[0];
+  if(!f) return;
+  const r=new FileReader();
+  r.onload=e=>{
+    const wb=XLSX.read(new Uint8Array(e.target.result),{type:"array"});
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
     rows.forEach(row=>{
-      if(questions.length < 50 && row.Savol && row.Togri){
+      const c=String(row.Togri||"").toUpperCase();
+      if(row.Savol && ["A","B","C","D"].includes(c) && questions.length<50){
         questions.push({
           text:row.Savol,
-          image:row.Rasm || "",
+          image:row.Rasm||"",
           options:{A:row.A||"",B:row.B||"",C:row.C||"",D:row.D||""},
-          correct:row.Togri
+          correct:c
         });
       }
     });
     render();
-    excelMsg.innerText = "Excel yuklandi";
+    excelMsg.innerText="Excel yuklandi";
   };
   r.readAsArrayBuffer(f);
 }
