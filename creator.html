@@ -117,112 +117,186 @@ const firebaseConfig={
   appId:"1:316652697568:web:7b6b24a3aefc44dcd1dd85"
 };
 firebase.initializeApp(firebaseConfig);
-const db=firebase.firestore();
-const storage=firebase.storage();
+const db = firebase.firestore();
+const storage = firebase.storage();
 
-let questions=[], editIndex=null;
+let questions = [];
+let editIndex = null;
+let editingImage = ""; // ⭐ MUHIM
 
-/* IMAGE PREVIEW */
+/* PREVIEW */
 function previewImage(){
-  const f=imgFile.files[0];
+  const f = imgFile.files[0];
   if(!f) return;
-  const r=new FileReader();
-  r.onload=e=>{
-    previewImg.src=e.target.result;
+  const r = new FileReader();
+  r.onload = e=>{
+    previewImg.src = e.target.result;
     imgPreview.style.display="block";
   };
   r.readAsDataURL(f);
 }
 
+/* CLEAR FORM */
+function clearForm(){
+  qText.value = "";
+  imgUrl.value = "";
+  imgFile.value = "";
+  previewImg.src = "";
+  imgPreview.style.display = "none";
+  a.value = b.value = c.value = d.value = "";
+  correct.value = "";
+  editIndex = null;
+  editingImage = "";
+}
+
 /* SAVE QUESTION */
 async function saveQuestion(){
-  if(!qText.value||!correct.value) return alert("Savol to‘liq emas");
-  if(editIndex===null && questions.length>=50) return alert("50 ta savol bo‘ldi");
-
-  let image="";
-  if(imgFile.files[0]){
-    const ref=storage.ref("questions/"+Date.now()+"_"+imgFile.files[0].name);
-    await ref.put(imgFile.files[0]);
-    image=await ref.getDownloadURL();
-  }else if(imgUrl.value){
-    image=imgUrl.value;
+  if(!qText.value || !correct.value){
+    alert("Savol to‘liq emas");
+    return;
+  }
+  if(editIndex===null && questions.length>=50){
+    alert("50 ta savol bo‘ldi");
+    return;
   }
 
-  const obj={text:qText.value,image,options:{A:a.value,B:b.value,C:c.value,D:d.value},correct:correct.value};
+  let image = editingImage; // ⭐ agar edit bo‘lsa
 
-  editIndex===null?questions.push(obj):questions[editIndex]=obj;
-  editIndex=null;
-  qText.value=imgUrl.value=a.value=b.value=c.value=d.value="";
-  imgFile.value="";
-  imgPreview.style.display="none";
-  correct.value="";
+  if(imgFile.files.length > 0){
+    const file = imgFile.files[0];
+    const ref = storage.ref(`questions/${Date.now()}_${file.name}`);
+    await ref.put(file);
+    image = await ref.getDownloadURL();
+  } else if(imgUrl.value){
+    image = imgUrl.value;
+  }
+
+  const obj = {
+    text: qText.value,
+    image: image || "",
+    options:{
+      A: a.value,
+      B: b.value,
+      C: c.value,
+      D: d.value
+    },
+    correct: correct.value
+  };
+
+  if(editIndex === null){
+    questions.push(obj);
+  } else {
+    questions[editIndex] = obj;
+  }
+
+  clearForm();
   render();
 }
 
 /* RENDER */
 function render(){
-  questionList.innerHTML="";
+  questionList.innerHTML = "";
   questions.forEach((q,i)=>{
-    questionList.innerHTML+=`
+    questionList.innerHTML += `
       <div class="qitem">
         <b>${i+1}. ${q.text}</b><br>
-        ${q.image?`<img src="${q.image}" style="max-width:200px;margin-top:8px">`:""}
-        <div>To‘g‘ri: ${q.correct}</div>
+        ${q.image ? `<img src="${q.image}" style="max-width:200px;margin-top:8px">` : ""}
+        <div><b>To‘g‘ri:</b> ${q.correct}</div>
         <button onclick="editQ(${i})">✏️</button>
         <button class="red" onclick="delQ(${i})">❌</button>
-      </div>`;
+      </div>
+    `;
   });
-  count.innerText=`Savollar: ${questions.length} / 50`;
+  count.innerText = `Savollar: ${questions.length} / 50`;
 }
 
+/* EDIT */
 function editQ(i){
-  const q=questions[i];
-  editIndex=i;
-  qText.value=q.text;
-  imgUrl.value=q.image;
-  a.value=q.options.A;b.value=q.options.B;c.value=q.options.C;d.value=q.options.D;
-  correct.value=q.correct;
-  if(q.image){previewImg.src=q.image;imgPreview.style.display="block";}
+  const q = questions[i];
+  editIndex = i;
+  editingImage = q.image || "";
+
+  qText.value = q.text;
+  imgUrl.value = "";
+  imgFile.value = "";
+  a.value = q.options.A;
+  b.value = q.options.B;
+  c.value = q.options.C;
+  d.value = q.options.D;
+  correct.value = q.correct;
+
+  if(q.image){
+    previewImg.src = q.image;
+    imgPreview.style.display = "block";
+  } else {
+    imgPreview.style.display = "none";
+  }
 }
-function delQ(i){questions.splice(i,1);render();}
+
+/* DELETE */
+function delQ(i){
+  if(!confirm("Savol o‘chirilsinmi?")) return;
+  questions.splice(i,1);
+  render();
+}
 
 /* SAVE TEST */
 async function saveTest(){
-  if(!testId.value) return alert("Test ID yo‘q");
+  if(!testId.value){
+    alert("Test ID yo‘q");
+    return;
+  }
   await db.collection("tests").doc(testId.value).set({
-    date:date.value,start:start.value,end:end.value,duration:duration.value,questions
+    date: date.value,
+    start: start.value,
+    end: end.value,
+    duration: duration.value,
+    questions
   });
-  alert("Test serverga saqlandi");
+  alert("✅ Test serverga saqlandi");
   loadSavedTests();
 }
 
 /* LOAD SAVED */
 async function loadSavedTests(){
-  savedTests.innerHTML="";
-  const snap=await db.collection("tests").get();
-  if(snap.empty){savedTests.innerHTML="<i>Test yo‘q</i>";return;}
+  savedTests.innerHTML = "";
+  const snap = await db.collection("tests").get();
+  if(snap.empty){
+    savedTests.innerHTML = "<i>Test yo‘q</i>";
+    return;
+  }
   snap.forEach(d=>{
-    savedTests.innerHTML+=`
+    savedTests.innerHTML += `
       <div class="qitem">
         <b>${d.id}</b>
         <button onclick="loadTest('${d.id}')">✏️</button>
         <button class="red" onclick="deleteTest('${d.id}')">❌</button>
-      </div>`;
+      </div>
+    `;
   });
 }
+
 async function loadTest(id){
-  const d=await db.collection("tests").doc(id).get();
-  const t=d.data();
-  testId.value=id;
-  date.value=t.date||"";start.value=t.start||"";end.value=t.end||"";duration.value=t.duration||"";
-  questions=t.questions||[];
+  const d = await db.collection("tests").doc(id).get();
+  const t = d.data();
+  testId.value = id;
+  date.value = t.date || "";
+  start.value = t.start || "";
+  end.value = t.end || "";
+  duration.value = t.duration || "";
+  questions = t.questions || [];
+  clearForm();
   render();
 }
+
 async function deleteTest(id){
-  if(!confirm("Test o‘chirilsinmi?"))return;
+  if(!confirm("Test o‘chirilsinmi?")) return;
   await db.collection("tests").doc(id).delete();
   loadSavedTests();
 }
+
+loadSavedTests();
+</script>
 
 /* EXCEL */
 function loadExcel(){
@@ -246,3 +320,4 @@ loadSavedTests();
 </script>
 </body>
 </html>
+
