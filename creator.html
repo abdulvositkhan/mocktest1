@@ -7,77 +7,32 @@
 
 <style>
 *{box-sizing:border-box;font-family:Arial,sans-serif}
-body{
-  margin:0;
-  min-height:100vh;
-  background:#f0fdf4;
-  display:flex;
-  justify-content:center;
-  padding:30px;
-}
-.container{
-  width:100%;
-  max-width:1100px;
-  background:#fff;
-  padding:30px;
-  border-radius:22px;
-  border:2px solid #e5e7eb;
-  box-shadow:0 25px 50px rgba(0,0,0,0.15);
-}
-h1,h2{margin-top:0;text-align:center}
-input,textarea,select{
-  width:100%;
-  padding:12px;
-  margin-top:10px;
-  border-radius:10px;
-  border:2px solid #e5e7eb;
-}
+body{margin:0;min-height:100vh;background:#f0fdf4;display:flex;justify-content:center;padding:30px}
+.container{width:100%;max-width:1100px;background:#fff;padding:30px;border-radius:22px;border:2px solid #e5e7eb;box-shadow:0 25px 50px rgba(0,0,0,0.15)}
+h1,h2{text-align:center;margin-top:0}
+input,textarea,select{width:100%;padding:12px;margin-top:10px;border-radius:10px;border:2px solid #e5e7eb}
 textarea{resize:vertical}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-button{
-  padding:12px 18px;
-  font-weight:bold;
-  border:none;
-  border-radius:10px;
-  cursor:pointer;
-}
+button{padding:12px 18px;font-weight:bold;border:none;border-radius:10px;cursor:pointer}
 .blue{background:#4f46e5;color:white}
 .green{background:#16a34a;color:white}
 .red{background:#dc2626;color:white}
-.qbox{
-  border:2px dashed #d1d5db;
-  padding:15px;
-  border-radius:14px;
-  margin-top:15px;
-}
-.qitem{
-  border:1px solid #e5e7eb;
-  padding:12px;
-  border-radius:12px;
-  margin-top:10px;
-  background:#f9fafb;
-}
+.qbox{border:2px dashed #d1d5db;padding:15px;border-radius:14px;margin-top:15px}
+.qitem{border:1px solid #e5e7eb;padding:12px;border-radius:12px;margin-top:10px;background:#f9fafb}
 .preview{display:none;margin-top:10px}
 .preview img{max-width:100%;border-radius:10px}
-.footer{
-  margin-top:40px;
-  text-align:center;
-  color:#6b7280;
-  font-weight:bold;
-}
+.footer{text-align:center;margin-top:40px;color:#6b7280;font-weight:bold}
 </style>
 </head>
 <body>
 
 <script>
-/* 🔐 ADMIN HIMOYASI */
-if(localStorage.getItem("adminAuth")!=="true"){
+if(sessionStorage.getItem("adminAuth")!=="true"){
   location.href="admin-login.html";
 }
 </script>
 
 <div class="container">
-
 <h1>🛠 Admin Panel — Test yaratish</h1>
 
 <input id="testId" placeholder="Test ID (masalan: MAT2025)">
@@ -104,33 +59,25 @@ if(localStorage.getItem("adminAuth")!=="true"){
 <h2>✍️ Savol qo‘shish / tahrirlash</h2>
 
 <div class="qbox">
-  <textarea id="qText" rows="3" placeholder="Savol matni"></textarea>
+<textarea id="qText" rows="3" placeholder="Savol matni"></textarea>
+<input id="imgUrl" placeholder="Rasm URL">
+<textarea id="a" rows="2" placeholder="A variant"></textarea>
+<textarea id="b" rows="2" placeholder="B variant"></textarea>
+<textarea id="c" rows="2" placeholder="C variant"></textarea>
+<textarea id="d" rows="2" placeholder="D variant"></textarea>
 
-  <input id="imgUrl" placeholder="Rasm URL" oninput="previewUrl()">
-  <input type="file" id="imgFile" accept="image/*" onchange="previewFile()">
+<select id="correct">
+<option value="">To‘g‘ri javob</option>
+<option>A</option><option>B</option><option>C</option><option>D</option>
+</select>
 
-  <div class="preview" id="imgPreview">
-    <img id="previewImg">
-  </div>
-
-  <textarea id="a" rows="2" placeholder="A variant"></textarea>
-  <textarea id="b" rows="2" placeholder="B variant"></textarea>
-  <textarea id="c" rows="2" placeholder="C variant"></textarea>
-  <textarea id="d" rows="2" placeholder="D variant"></textarea>
-
-  <select id="correct">
-    <option value="">To‘g‘ri javob</option>
-    <option>A</option><option>B</option><option>C</option><option>D</option>
-  </select>
-
-  <button class="blue" onclick="saveQuestion()">Saqlash</button>
-  <button class="red" onclick="cancelEdit()">Bekor qilish</button>
-  <div id="count">Savollar: 0 / 50</div>
+<button class="blue" onclick="saveQuestion()">Saqlash</button>
+<div id="count">Savollar: 0 / 50</div>
 </div>
 
 <hr>
 
-<h2>📋 Savollar ro‘yxati</h2>
+<h2>📋 Savollar</h2>
 <div id="questionList"></div>
 
 <button class="green" onclick="saveTest()">💾 TESTNI SAQLASH</button>
@@ -141,214 +88,151 @@ if(localStorage.getItem("adminAuth")!=="true"){
 <div id="savedTests"></div>
 
 <div class="footer">@Ped_Life_Uz</div>
-
 </div>
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <script>
-let questions=[];
-let editIndex=null;
+/* 🔥 FIREBASE CONFIG — O‘ZINGIZNIKI */
+const firebaseConfig = {
+  apiKey: "API_KEY",
+  authDomain: "PROJECT.firebaseapp.com",
+  projectId: "PROJECT_ID",
+  storageBucket: "PROJECT.appspot.com",
+  messagingSenderId: "SENDER_ID",
+  appId: "APP_ID"
+};
 
-/* PREVIEW */
-function previewUrl(){
-  if(imgUrl.value){
-    previewImg.src=imgUrl.value;
-    imgPreview.style.display="block";
-  }else imgPreview.style.display="none";
-}
-function previewFile(){
-  const f=imgFile.files[0];
-  if(!f) return;
-  const r=new FileReader();
-  r.onload=e=>{
-    previewImg.src=e.target.result;
-    imgPreview.style.display="block";
-  };
-  r.readAsDataURL(f);
-}
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-/* SAVE / EDIT QUESTION */
+/* ===== LOGIKA ===== */
+let questions=[], editIndex=null;
+
+/* SAVE QUESTION */
 function saveQuestion(){
-  if(!qText.value || !correct.value){
-    alert("Savol to‘liq emas");
-    return;
-  }
+  if(!qText.value||!correct.value) return alert("Savol to‘liq emas");
+  if(editIndex===null && questions.length>=50) return alert("50 ta savol bo‘ldi");
 
   const obj={
     text:qText.value,
-    image:imgFile.files[0]?previewImg.src:imgUrl.value,
+    image:imgUrl.value,
     options:{A:a.value,B:b.value,C:c.value,D:d.value},
     correct:correct.value
   };
 
-  if(editIndex===null){
-    if(questions.length>=50){
-      alert("50 ta savol bo‘ldi");
-      return;
-    }
-    questions.push(obj);
-  }else{
-    questions[editIndex]=obj;
-    editIndex=null;
-  }
-
-  clearForm();
-  renderQuestions();
-  renderCount();
+  editIndex===null ? questions.push(obj) : questions[editIndex]=obj;
+  editIndex=null;
+  qText.value=imgUrl.value=a.value=b.value=c.value=d.value="";
+  correct.value="";
+  render();
 }
 
-/* RENDER QUESTIONS */
-function renderQuestions(){
-  const box=document.getElementById("questionList");
-  box.innerHTML="";
-  if(questions.length===0){
-    box.innerHTML="<i>Hali savol qo‘shilmadi</i>";
-    return;
-  }
+/* RENDER */
+function render(){
+  questionList.innerHTML="";
   questions.forEach((q,i)=>{
-    box.innerHTML+=`
+    questionList.innerHTML+=`
       <div class="qitem">
         <b>${i+1}. ${q.text}</b><br>
-        A) ${q.options.A}<br>
-        B) ${q.options.B}<br>
-        C) ${q.options.C}<br>
-        D) ${q.options.D}<br>
-        <b>To‘g‘ri:</b> ${q.correct}
+        To‘g‘ri: ${q.correct}
         <div>
-          <button onclick="editQuestion(${i})">✏️</button>
-          <button class="red" onclick="deleteQuestion(${i})">❌</button>
+          <button onclick="editQ(${i})">✏️</button>
+          <button class="red" onclick="delQ(${i})">❌</button>
         </div>
-      </div>
-    `;
+      </div>`;
   });
+  count.innerText=`Savollar: ${questions.length} / 50`;
 }
 
-/* EDIT */
-function editQuestion(i){
+function editQ(i){
   const q=questions[i];
   editIndex=i;
   qText.value=q.text;
-  imgUrl.value=q.image||"";
+  imgUrl.value=q.image;
   a.value=q.options.A;
   b.value=q.options.B;
   c.value=q.options.C;
   d.value=q.options.D;
   correct.value=q.correct;
-  if(q.image){
-    previewImg.src=q.image;
-    imgPreview.style.display="block";
-  }
+}
+function delQ(i){questions.splice(i,1);render();}
+
+/* SAVE TEST → SERVER */
+async function saveTest(){
+  if(!testId.value) return alert("Test ID yo‘q");
+  await db.collection("tests").doc(testId.value).set({
+    date:date.value,
+    start:start.value,
+    end:end.value,
+    duration:duration.value,
+    questions
+  });
+  alert("Test serverga saqlandi");
+  loadSavedTests();
 }
 
-/* DELETE */
-function deleteQuestion(i){
-  questions.splice(i,1);
-  renderQuestions();
-  renderCount();
-}
-
-/* CLEAR */
-function cancelEdit(){
-  editIndex=null;
-  clearForm();
-}
-function clearForm(){
-  qText.value=imgUrl.value=a.value=b.value=c.value=d.value="";
-  imgFile.value="";
-  correct.value="";
-  imgPreview.style.display="none";
-}
-
-/* COUNT */
-function renderCount(){
-  count.innerText=`Savollar: ${questions.length} / 50`;
-}
-
-/* SAVE TEST */
-function saveTest(){
-  if(!testId.value){
-    alert("Test ID kiritilmadi");
-    return;
-  }
-  const all=JSON.parse(localStorage.getItem("allTests"))||{};
-  all[testId.value]={date:date.value,start:start.value,end:end.value,duration:duration.value,questions};
-  localStorage.setItem("allTests",JSON.stringify(all));
-  renderSavedTests();
-  alert("Test saqlandi");
-}
-
-/* SAVED TESTS */
-function renderSavedTests(){
-  const box=document.getElementById("savedTests");
-  const all=JSON.parse(localStorage.getItem("allTests"))||{};
-  box.innerHTML="";
-  if(Object.keys(all).length===0){
-    box.innerHTML="<i>Hali test yo‘q</i>";
-    return;
-  }
-  Object.keys(all).forEach(id=>{
-    box.innerHTML+=`
+/* LOAD SAVED TESTS */
+async function loadSavedTests(){
+  savedTests.innerHTML="";
+  const snap=await db.collection("tests").get();
+  if(snap.empty){savedTests.innerHTML="<i>Test yo‘q</i>";return;}
+  snap.forEach(d=>{
+    savedTests.innerHTML+=`
       <div class="qitem">
-        <b>${id}</b>
-        <button onclick="loadTest('${id}')">✏️ Tahrirlash</button>
-        <button class="red" onclick="deleteTest('${id}')">❌ O‘chirish</button>
-      </div>
-    `;
+        <b>${d.id}</b>
+        <button onclick="loadTest('${d.id}')">✏️</button>
+        <button class="red" onclick="deleteTest('${d.id}')">❌</button>
+      </div>`;
   });
 }
-function loadTest(id){
-  const t=JSON.parse(localStorage.getItem("allTests"))[id];
+
+async function loadTest(id){
+  const d=await db.collection("tests").doc(id).get();
+  const t=d.data();
   testId.value=id;
-  date.value=t.date;
-  start.value=t.start;
-  end.value=t.end;
-  duration.value=t.duration;
+  date.value=t.date||"";
+  start.value=t.start||"";
+  end.value=t.end||"";
+  duration.value=t.duration||"";
   questions=t.questions||[];
-  renderQuestions();
-  renderCount();
-}
-function deleteTest(id){
-  if(!confirm("Testni o‘chirasizmi?")) return;
-  const all=JSON.parse(localStorage.getItem("allTests"));
-  delete all[id];
-  localStorage.setItem("allTests",JSON.stringify(all));
-  renderSavedTests();
+  render();
 }
 
-/* EXCEL LOAD */
+async function deleteTest(id){
+  if(!confirm("Test o‘chirilsinmi?")) return;
+  await db.collection("tests").doc(id).delete();
+  loadSavedTests();
+}
+
+/* EXCEL */
 function loadExcel(){
   const f=excelFile.files[0];
-  if(!f){
-    alert("Excel tanlanmadi");
-    return;
-  }
+  if(!f) return;
   const r=new FileReader();
   r.onload=e=>{
     const wb=XLSX.read(new Uint8Array(e.target.result),{type:"array"});
     const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-    let added=0;
     rows.forEach(row=>{
-      const c=String(row.Togri||"").toUpperCase();
-      if(row.Savol && ["A","B","C","D"].includes(c) && questions.length<50){
+      const c=(row.Togri||"").toUpperCase();
+      if(row.Savol&&["A","B","C","D"].includes(c)&&questions.length<50){
         questions.push({
           text:row.Savol,
           image:row.Rasm||"",
           options:{A:row.A||"",B:row.B||"",C:row.C||"",D:row.D||""},
           correct:c
         });
-        added++;
       }
     });
-    renderQuestions();
-    renderCount();
-    excelMsg.innerText=`Excel yuklandi (${added} ta savol)`;
+    render();
   };
   r.readAsArrayBuffer(f);
 }
 
-renderSavedTests();
+loadSavedTests();
 </script>
-
 </body>
 </html>
