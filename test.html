@@ -138,56 +138,54 @@ button{
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-/* 🔥 FIREBASE CONFIG */
-const firebaseConfig = {
-  apiKey: "AIzaSyDMyRSvTXXxkgTPyeZSeVnpHgh1tH4lJjE",
-  authDomain: "mock-8b900.firebaseapp.com",
-  projectId: "mock-8b900",
-  storageBucket: "mock-8b900.appspot.com",
-  messagingSenderId: "316652697568",
-  appId: "1:316652697568:web:7b6b24a3aefc44dcd1dd85"
+const firebaseConfig={
+  apiKey:"AIzaSyDMyRSvTXXxkgTPyeZSeVnpHgh1tH4lJjE",
+  authDomain:"mock-8b900.firebaseapp.com",
+  projectId:"mock-8b900",
+  storageBucket:"mock-8b900.appspot.com",
+  messagingSenderId:"316652697568",
+  appId:"1:316652697568:web:7b6b24a3aefc44dcd1dd85"
 };
-
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const db=firebase.firestore();
 
 /* SESSION */
-const testId = sessionStorage.getItem("currentTestId");
-const user = JSON.parse(sessionStorage.getItem("currentUser"));
+const testId=sessionStorage.getItem("currentTestId");
+const user=JSON.parse(sessionStorage.getItem("currentUser")||"{}");
+sessionStorage.setItem("viewer","student");
 
-if(!testId || !user){
+if(!testId||!user.ism){
   alert("Test topilmadi");
   location.href="index.html";
 }
 
-let test = null;
-let index = 0;
-let answers = {};
-let timeLeft = 0;
-let isFinished = false;
-let finalResult = null;
+let test=null;
+let index=0;
+let selected={};
+let timeLeft=0;
+let isFinished=false;
 
-/* LOAD TEST FROM SERVER */
+/* LOAD TEST */
 db.collection("tests").doc(testId).get().then(doc=>{
   if(!doc.exists){
     alert("Test topilmadi");
     location.href="index.html";
     return;
   }
-  test = doc.data();
-  timeLeft = Number(test.duration) * 60;
+  test=doc.data();
+  timeLeft=Number(test.duration)*60;
   startTimer();
   render();
 });
 
 /* TIMER */
 function startTimer(){
-  const t = setInterval(()=>{
-    const m = Math.floor(timeLeft/60);
-    const s = timeLeft % 60;
-    timer.innerText = `⏱ ${m}:${String(s).padStart(2,"0")}`;
+  const t=setInterval(()=>{
+    const m=Math.floor(timeLeft/60);
+    const s=timeLeft%60;
+    timer.innerText=`⏱ ${m}:${String(s).padStart(2,"0")}`;
     timeLeft--;
-    if(timeLeft < 0){
+    if(timeLeft<0){
       clearInterval(t);
       finish();
     }
@@ -196,72 +194,78 @@ function startTimer(){
 
 /* RENDER */
 function render(){
-  const q = test.questions[index];
-  qBox.innerHTML = `
+  const q=test.questions[index];
+  qBox.innerHTML=`
     ${index+1}. ${q.text}
-    ${q.image ? `<img src="${q.image}">` : ""}
+    ${q.image?`<img src="${q.image}">`:""}
   `;
-  options.innerHTML = "";
+  options.innerHTML="";
   for(const k in q.options){
-    const sel = answers[index] === k ? "selected" : "";
-    options.innerHTML += `
+    const sel=selected[index]===k?"selected":"";
+    options.innerHTML+=`
       <div class="option ${sel}" onclick="choose('${k}')">
         ${k}) ${q.options[k]}
       </div>`;
   }
-  finishBtn.style.display =
-    index === test.questions.length-1 ? "block" : "none";
+  finishBtn.style.display=index===test.questions.length-1?"block":"none";
 }
 
-function choose(v){answers[index]=v;render();}
+function choose(v){selected[index]=v;render();}
 function next(){if(index<test.questions.length-1){index++;render();}}
 function prev(){if(index>0){index--;render();}}
 
 /* FINISH */
 function finish(){
   if(isFinished) return;
-  isFinished = true;
+  isFinished=true;
 
-  let correct = 0;
+  let correct=0;
+  const answers=[];
+
   test.questions.forEach((q,i)=>{
-    if(answers[i] === q.correct) correct++;
+    const sel=selected[i]||null;
+    if(sel===q.correct) correct++;
+    answers.push({
+      question:q.text,
+      image:q.image||"",
+      options:q.options,
+      correct:q.correct,
+      selected:sel
+    });
   });
 
-  const wrong = test.questions.length - correct;
-  const ball = correct * 2;
+  const ball=correct*2;
+  const wrong=test.questions.length-correct;
 
-  let title = "❌ Attestatsiya Mock testidan o‘tmadingiz";
-  if(ball >= 80) title = "🔵 Oliy toifa balini to‘pladingiz";
-  else if(ball >= 70) title = "🟡 Birinchi toifa balini to‘pladingiz";
-  else if(ball >= 60) title = "🟠 Ikkinchi toifa balini to‘pladingiz";
+  let title="❌ Attestatsiya Mock testidan o‘tmadingiz";
+  if(ball>=80) title="🔵 Oliy toifa balini to‘pladingiz";
+  else if(ball>=70) title="🟡 Birinchi toifa balini to‘pladingiz";
+  else if(ball>=60) title="🟠 Ikkinchi toifa balini to‘pladingiz";
 
-  finalResult = {
+  window.finalResult={
     ism:user.ism,
     familiya:user.familiya,
     testId,
     ball,
-    correct,
-    wrong,
-    time:new Date().toLocaleString()
+    time:new Date().toLocaleString(),
+    answers
   };
 
-  resultTitle.innerText = title;
-  resultScore.innerText = `${ball}/100`;
-  resultInfo.innerHTML = `
+  resultTitle.innerText=title;
+  resultScore.innerText=`${ball}/100`;
+  resultInfo.innerHTML=`
     ✅ To‘g‘ri: <b>${correct}</b><br>
     ❌ Noto‘g‘ri: <b>${wrong}</b>
   `;
-
   resultModal.style.display="flex";
 }
 
-/* SAVE RESULT → SERVER */
+/* SAVE RESULT */
 async function goResult(){
-  await db.collection("results").add(finalResult);
+  await db.collection("results").add(window.finalResult);
   location.href="results.html";
 }
 </script>
 
 </body>
 </html>
-
