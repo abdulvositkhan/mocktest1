@@ -194,20 +194,31 @@ function startTimer(){
 
 /* RENDER */
 function render(){
-  const q=test.questions[index];
-  qBox.innerHTML=`
+  const q = test.questions[index];
+
+  qBox.innerHTML = `
     ${index+1}. ${q.text}
-    ${q.image?`<img src="${q.image}">`:""}
+    ${q.image ? `<img src="${q.image}">` : ""}
   `;
-  options.innerHTML="";
-  for(const k in q.options){
-    const sel=selected[index]===k?"selected":"";
-    options.innerHTML+=`
-      <div class="option ${sel}" onclick="choose('${k}')">
+
+  options.innerHTML = "";
+
+  const order = ["A","B","C","D"]; // 🔒 qat’iy tartib
+
+  order.forEach(k=>{
+    if(!q.options[k]) return;
+
+    const selected = answers[index] === k ? "selected" : "";
+
+    options.innerHTML += `
+      <div class="option ${selected}" onclick="choose('${k}')">
         ${k}) ${q.options[k]}
-      </div>`;
-  }
-  finishBtn.style.display=index===test.questions.length-1?"block":"none";
+      </div>
+    `;
+  });
+
+  finishBtn.style.display =
+    index === test.questions.length - 1 ? "block" : "none";
 }
 
 function choose(v){selected[index]=v;render();}
@@ -269,3 +280,4 @@ async function goResult(){
 
 </body>
 </html>
+
