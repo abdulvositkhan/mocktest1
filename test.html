@@ -207,15 +207,6 @@ function render(){
         ${k}) ${q.options[k]}
       </div>`;
   }
-  const order = ["A", "B", "C", "D"];
-
-optionsBox.innerHTML = order.map(k => `
-  <div class="option">
-    <input type="radio" name="answer" value="${k}">
-    <label>${k}) ${question.options[k]}</label>
-  </div>
-`).join("");
-
   finishBtn.style.display =
     index === test.questions.length-1 ? "block" : "none";
 }
@@ -223,6 +214,7 @@ optionsBox.innerHTML = order.map(k => `
 function choose(v){answers[index]=v;render();}
 function next(){if(index<test.questions.length-1){index++;render();}}
 function prev(){if(index>0){index--;render();}}
+
 
 /* FINISH */
 function finish(){
@@ -279,6 +271,7 @@ async function goResult(){
 
 </body>
 </html>
+
 
 
 
