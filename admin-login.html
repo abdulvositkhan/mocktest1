@@ -7,29 +7,55 @@
 </head>
 <body class="bg-gradient">
 
-  <div class="card">
-    <h2>Admin kirish</h2>
+<div class="card">
+  <h2>Admin kirish</h2>
 
-    <input id="login" type="text" placeholder="Login" class="input">
-    <input id="password" type="password" placeholder="Parol" class="input">
+  <input id="login" type="email" placeholder="Email" class="input">
+  <input id="password" type="password" placeholder="Parol" class="input">
 
-    <button class="btn blue big" onclick="adminLogin()">KIRISH</button>
+  <button class="btn blue big" onclick="adminLogin()">KIRISH</button>
 
-    <p id="error" class="error"></p>
-  </div>
+  <p id="error" class="error"></p>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <script>
+/* 🔥 FIREBASE CONFIG — O‘ZINGIZNIKI */
+const firebaseConfig = {
+  apiKey: "API_KEY",
+  authDomain: "PROJECT.firebaseapp.com",
+  projectId: "PROJECT_ID",
+  storageBucket: "PROJECT.appspot.com",
+  messagingSenderId: "SENDER_ID",
+  appId: "APP_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
 function adminLogin() {
   const login = document.getElementById("login").value.trim();
   const password = document.getElementById("password").value.trim();
   const error = document.getElementById("error");
 
-  if (login === "Abdullayev" && password === "6693") {
-    localStorage.setItem("admin", "true");
-    window.location.href = "creator.html";
-  } else {
-    error.innerText = "❌ Login yoki parol noto‘g‘ri";
+  error.innerText = "";
+
+  if(!login || !password){
+    error.innerText = "Email va parolni kiriting";
+    return;
   }
+
+  auth.signInWithEmailAndPassword(login, password)
+    .then(()=>{
+      sessionStorage.setItem("adminAuth", "true");
+      window.location.href = "creator.html";
+    })
+    .catch(()=>{
+      error.innerText = "❌ Login yoki parol noto‘g‘ri";
+    });
 }
 </script>
 
@@ -42,7 +68,6 @@ function adminLogin() {
   border: 1px solid #ccc;
   font-size: 16px;
 }
-
 .error {
   color: red;
   margin-top: 10px;
