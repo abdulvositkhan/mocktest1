@@ -70,13 +70,14 @@ button{
 <body>
 
 <script>
-/* ADMIN HIMOYASI */
+/* 🔐 ADMIN HIMOYASI */
 if(localStorage.getItem("adminAuth")!=="true"){
   location.href="admin-login.html";
 }
 </script>
 
 <div class="container">
+
 <h1>🛠 Admin Panel — Test yaratish</h1>
 
 <input id="testId" placeholder="Test ID (masalan: MAT2025)">
@@ -101,6 +102,7 @@ if(localStorage.getItem("adminAuth")!=="true"){
 <hr>
 
 <h2>✍️ Savol qo‘shish / tahrirlash</h2>
+
 <div class="qbox">
   <textarea id="qText" rows="3" placeholder="Savol matni"></textarea>
 
@@ -129,11 +131,17 @@ if(localStorage.getItem("adminAuth")!=="true"){
 <hr>
 
 <h2>📋 Savollar ro‘yxati</h2>
-<div id="list"></div>
+<div id="questionList"></div>
 
 <button class="green" onclick="saveTest()">💾 TESTNI SAQLASH</button>
 
+<hr>
+
+<h2>📚 Saqlangan testlar</h2>
+<div id="savedTests"></div>
+
 <div class="footer">@Ped_Life_Uz</div>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
@@ -160,7 +168,7 @@ function previewFile(){
   r.readAsDataURL(f);
 }
 
-/* SAVE QUESTION */
+/* SAVE / EDIT QUESTION */
 function saveQuestion(){
   if(!qText.value || !correct.value){
     alert("Savol to‘liq emas");
@@ -175,7 +183,10 @@ function saveQuestion(){
   };
 
   if(editIndex===null){
-    if(questions.length>=50) return alert("50 ta savol bo‘ldi");
+    if(questions.length>=50){
+      alert("50 ta savol bo‘ldi");
+      return;
+    }
     questions.push(obj);
   }else{
     questions[editIndex]=obj;
@@ -183,14 +194,20 @@ function saveQuestion(){
   }
 
   clearForm();
-  render();
+  renderQuestions();
+  renderCount();
 }
 
-/* RENDER */
-function render(){
-  list.innerHTML="";
+/* RENDER QUESTIONS */
+function renderQuestions(){
+  const box=document.getElementById("questionList");
+  box.innerHTML="";
+  if(questions.length===0){
+    box.innerHTML="<i>Hali savol qo‘shilmadi</i>";
+    return;
+  }
   questions.forEach((q,i)=>{
-    list.innerHTML+=`
+    box.innerHTML+=`
       <div class="qitem">
         <b>${i+1}. ${q.text}</b><br>
         A) ${q.options.A}<br>
@@ -199,17 +216,16 @@ function render(){
         D) ${q.options.D}<br>
         <b>To‘g‘ri:</b> ${q.correct}
         <div>
-          <button onclick="editQ(${i})">✏️</button>
-          <button class="red" onclick="removeQ(${i})">❌</button>
+          <button onclick="editQuestion(${i})">✏️</button>
+          <button class="red" onclick="deleteQuestion(${i})">❌</button>
         </div>
       </div>
     `;
   });
-  count.innerText=`Savollar: ${questions.length} / 50`;
 }
 
 /* EDIT */
-function editQ(i){
+function editQuestion(i){
   const q=questions[i];
   editIndex=i;
   qText.value=q.text;
@@ -225,10 +241,11 @@ function editQ(i){
   }
 }
 
-/* REMOVE */
-function removeQ(i){
+/* DELETE */
+function deleteQuestion(i){
   questions.splice(i,1);
-  render();
+  renderQuestions();
+  renderCount();
 }
 
 /* CLEAR */
@@ -243,23 +260,74 @@ function clearForm(){
   imgPreview.style.display="none";
 }
 
+/* COUNT */
+function renderCount(){
+  count.innerText=`Savollar: ${questions.length} / 50`;
+}
+
 /* SAVE TEST */
 function saveTest(){
-  if(!testId.value) return alert("Test ID kiritilmadi");
+  if(!testId.value){
+    alert("Test ID kiritilmadi");
+    return;
+  }
   const all=JSON.parse(localStorage.getItem("allTests"))||{};
   all[testId.value]={date:date.value,start:start.value,end:end.value,duration:duration.value,questions};
   localStorage.setItem("allTests",JSON.stringify(all));
+  renderSavedTests();
   alert("Test saqlandi");
 }
 
-/* EXCEL */
+/* SAVED TESTS */
+function renderSavedTests(){
+  const box=document.getElementById("savedTests");
+  const all=JSON.parse(localStorage.getItem("allTests"))||{};
+  box.innerHTML="";
+  if(Object.keys(all).length===0){
+    box.innerHTML="<i>Hali test yo‘q</i>";
+    return;
+  }
+  Object.keys(all).forEach(id=>{
+    box.innerHTML+=`
+      <div class="qitem">
+        <b>${id}</b>
+        <button onclick="loadTest('${id}')">✏️ Tahrirlash</button>
+        <button class="red" onclick="deleteTest('${id}')">❌ O‘chirish</button>
+      </div>
+    `;
+  });
+}
+function loadTest(id){
+  const t=JSON.parse(localStorage.getItem("allTests"))[id];
+  testId.value=id;
+  date.value=t.date;
+  start.value=t.start;
+  end.value=t.end;
+  duration.value=t.duration;
+  questions=t.questions||[];
+  renderQuestions();
+  renderCount();
+}
+function deleteTest(id){
+  if(!confirm("Testni o‘chirasizmi?")) return;
+  const all=JSON.parse(localStorage.getItem("allTests"));
+  delete all[id];
+  localStorage.setItem("allTests",JSON.stringify(all));
+  renderSavedTests();
+}
+
+/* EXCEL LOAD */
 function loadExcel(){
   const f=excelFile.files[0];
-  if(!f) return;
+  if(!f){
+    alert("Excel tanlanmadi");
+    return;
+  }
   const r=new FileReader();
   r.onload=e=>{
     const wb=XLSX.read(new Uint8Array(e.target.result),{type:"array"});
     const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+    let added=0;
     rows.forEach(row=>{
       const c=String(row.Togri||"").toUpperCase();
       if(row.Savol && ["A","B","C","D"].includes(c) && questions.length<50){
@@ -269,13 +337,17 @@ function loadExcel(){
           options:{A:row.A||"",B:row.B||"",C:row.C||"",D:row.D||""},
           correct:c
         });
+        added++;
       }
     });
-    render();
-    excelMsg.innerText="Excel yuklandi";
+    renderQuestions();
+    renderCount();
+    excelMsg.innerText=`Excel yuklandi (${added} ta savol)`;
   };
   r.readAsArrayBuffer(f);
 }
+
+renderSavedTests();
 </script>
 
 </body>
