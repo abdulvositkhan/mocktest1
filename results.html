@@ -10,6 +10,7 @@
 body{margin:0;min-height:100vh;background:#f0fdf4;display:flex;justify-content:center;padding:30px}
 .container{width:100%;max-width:1100px;background:#fff;padding:30px;border-radius:22px;border:2px solid #e5e7eb;box-shadow:0 25px 50px rgba(0,0,0,0.15)}
 h1,h2{text-align:center;margin-top:0}
+
 .summary{text-align:center;padding:25px;border-radius:18px;margin-bottom:30px}
 .red{background:#fee2e2}
 .orange{background:#ffedd5}
@@ -18,19 +19,33 @@ h1,h2{text-align:center;margin-top:0}
 .big{font-size:38px;font-weight:bold}
 .user{font-size:20px;margin-bottom:10px}
 .time{margin-top:8px;color:#374151}
+
 .actions{display:flex;justify-content:center;gap:15px;margin-bottom:25px}
 .actions button{padding:12px 18px;font-weight:bold;border:none;border-radius:10px;cursor:pointer;background:#4f46e5;color:white}
+
 table{width:100%;border-collapse:collapse;margin-top:20px}
 th,td{border:1px solid #e5e7eb;padding:12px;text-align:center}
 th{background:#f3f4f6}
 tr:nth-child(even){background:#f9fafb}
+
 .low{color:#dc2626;font-weight:bold}
 .mid{color:#d97706;font-weight:bold}
 .high{color:#16a34a;font-weight:bold}
-.detail{border:1px solid #e5e7eb;border-radius:12px;padding:14px;margin-top:10px}
+
+.detail{
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  padding:16px;
+  margin-top:15px
+}
 .ok{background:#ecfdf5}
 .bad{background:#fee2e2}
-.footer{margin-top:40px;text-align:center;font-weight:bold;color:#4f46e5}
+
+.option{padding:6px 0}
+.correct{color:#16a34a;font-weight:bold}
+.wrong{color:#dc2626;font-weight:bold}
+
+.footer{text-align:center;margin-top:40px;font-weight:bold;color:#4f46e5}
 </style>
 </head>
 <body>
@@ -39,8 +54,8 @@ tr:nth-child(even){background:#f9fafb}
 <h1>📊 Test Natijalari</h1>
 
 <div class="actions" id="adminActions">
-  <button onclick="exportExcel()">📥 Excel yuklab olish</button>
-  <button onclick="exportPDF()">📄 PDF yuklab olish</button>
+  <button onclick="exportExcel()">📥 Excel</button>
+  <button onclick="exportPDF()">📄 PDF</button>
 </div>
 
 <div id="summary"></div>
@@ -55,7 +70,7 @@ tr:nth-child(even){background:#f9fafb}
         <th>Ism</th>
         <th>Familiya</th>
         <th>Ball</th>
-        <th>Tugagan vaqt</th>
+        <th>Vaqt</th>
       </tr>
     </thead>
     <tbody id="rows"></tbody>
@@ -74,95 +89,106 @@ tr:nth-child(even){background:#f9fafb}
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-/* 🔥 FIREBASE CONFIG */
-const firebaseConfig = {
-  apiKey: "AIzaSyDMyRSvTXXxkgTPyeZSeVnpHgh1tH4lJjE",
-  authDomain: "mock-8b900.firebaseapp.com",
-  projectId: "mock-8b900",
-  storageBucket: "mock-8b900.appspot.com",
-  messagingSenderId: "316652697568",
-  appId: "1:316652697568:web:7b6b24a3aefc44dcd1dd85"
+const firebaseConfig={
+  apiKey:"AIzaSyDMyRSvTXXxkgTPyeZSeVnpHgh1tH4lJjE",
+  authDomain:"mock-8b900.firebaseapp.com",
+  projectId:"mock-8b900",
+  storageBucket:"mock-8b900.appspot.com",
+  messagingSenderId:"316652697568",
+  appId:"1:316652697568:web:7b6b24a3aefc44dcd1dd85"
 };
-
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const db=firebase.firestore();
 
-/* VIEW MODE */
-const viewer = sessionStorage.getItem("viewer") || "student";
-const currentUser = JSON.parse(sessionStorage.getItem("currentUser") || "{}");
+const viewer=sessionStorage.getItem("viewer")||"student";
+const currentUser=JSON.parse(sessionStorage.getItem("currentUser")||"{}");
 
-const summary = document.getElementById("summary");
-const rows = document.getElementById("rows");
-const details = document.getElementById("details");
+const summary=document.getElementById("summary");
+const rows=document.getElementById("rows");
+const details=document.getElementById("details");
 
-if(viewer === "student"){
-  document.getElementById("adminBlock").style.display="none";
-  document.getElementById("adminActions").style.display="none";
-  document.getElementById("studentBlock").style.display="block";
-}else{
-  document.getElementById("studentBlock").style.display="none";
+if(viewer==="student"){
+  adminBlock.style.display="none";
+  adminActions.style.display="none";
+  studentBlock.style.display="block";
 }
 
-/* LOAD RESULTS */
 db.collection("results").orderBy("time","desc").get().then(snap=>{
   if(snap.empty){
     summary.innerHTML="<b>Natija topilmadi</b>";
     return;
   }
 
-  const all = [];
+  const all=[];
   snap.forEach(d=>all.push(d.data()));
 
-  const last = viewer==="student"
+  const last=viewer==="student"
     ? all.find(r=>r.ism===currentUser.ism && r.familiya===currentUser.familiya)
     : all[0];
 
   if(!last) return;
 
-  const ball = last.ball;
-  let cls="red", text="Attestatsiya Mock testidan o‘tmadingiz";
-  if(ball>=80){cls="blue";text="Oliy toifa balini to‘pladingiz";}
-  else if(ball>=70){cls="yellow";text="Birinchi toifa balini to‘pladingiz";}
-  else if(ball>=60){cls="orange";text="Ikkinchi toifa balini to‘pladingiz";}
+  renderSummary(last);
+
+  if(viewer!=="student") renderAdmin(all);
+  if(viewer==="student") renderStudent(last);
+});
+
+function renderSummary(r){
+  let cls="red",txt="Attestatsiya Mock testidan o‘tmadingiz";
+  if(r.ball>=80){cls="blue";txt="Oliy toifa balini to‘pladingiz";}
+  else if(r.ball>=70){cls="yellow";txt="Birinchi toifa balini to‘pladingiz";}
+  else if(r.ball>=60){cls="orange";txt="Ikkinchi toifa balini to‘pladingiz";}
 
   summary.innerHTML=`
     <div class="summary ${cls}">
-      <div class="user">${last.ism} ${last.familiya}</div>
-      <div class="big">${ball}/100</div>
-      <div>${text}</div>
-      <div class="time">Tugagan vaqt: ${last.time}</div>
+      <div class="user">${r.ism} ${r.familiya}</div>
+      <div class="big">${r.ball}/100</div>
+      <div>${txt}</div>
+      <div class="time">Tugagan vaqt: ${r.time}</div>
     </div>`;
+}
 
-  /* ADMIN TABLE */
-  if(viewer!=="student"){
-    all.forEach((r,i)=>{
-      const c=r.ball>=80?"high":r.ball>=60?"mid":"low";
-      rows.innerHTML+=`
-        <tr>
-          <td>${i+1}</td>
-          <td>${r.ism}</td>
-          <td>${r.familiya}</td>
-          <td class="${c}">${r.ball}</td>
-          <td>${r.time}</td>
-        </tr>`;
-    });
-  }
+function renderAdmin(list){
+  list.forEach((r,i)=>{
+    const c=r.ball>=80?"high":r.ball>=60?"mid":"low";
+    rows.innerHTML+=`
+      <tr>
+        <td>${i+1}</td>
+        <td>${r.ism}</td>
+        <td>${r.familiya}</td>
+        <td class="${c}">${r.ball}</td>
+        <td>${r.time}</td>
+      </tr>`;
+  });
+}
 
-  /* STUDENT DETAILS */
-  if(viewer==="student" && last.answers){
-    last.answers.forEach((a,i)=>{
-      details.innerHTML+=`
-        <div class="detail ${a.ok?'ok':'bad'}">
-          ${i+1}. ${a.text}
-        </div>`;
-    });
-  }
-});
+function renderStudent(r){
+  r.answers.forEach((a,i)=>{
+    let html=`
+      <div class="detail ${a.selected===a.correct?'ok':'bad'}">
+        <b>${i+1}. ${a.question}</b><br>
+        ${a.image?`<img src="${a.image}" style="max-width:200px;margin:10px 0">`:""}
+    `;
+    for(const k in a.options){
+      let cls="option";
+      if(k===a.correct) cls+=" correct";
+      if(k===a.selected && k!==a.correct) cls+=" wrong";
+      html+=`<div class="${cls}">${k}) ${a.options[k]}</div>`;
+    }
+    html+=`
+      <div style="margin-top:8px">
+        Sizning javobingiz: <b>${a.selected||"-"}</b><br>
+        To‘g‘ri javob: <b>${a.correct}</b>
+      </div>
+    </div>`;
+    details.innerHTML+=html;
+  });
+}
 
 /* EXPORT */
 function exportExcel(){
@@ -170,10 +196,7 @@ function exportExcel(){
     const data=[];
     snap.forEach(d=>data.push(d.data()));
     const ws=XLSX.utils.json_to_sheet(data.map(r=>({
-      Ism:r.ism,
-      Familiya:r.familiya,
-      Ball:r.ball,
-      Vaqt:r.time
+      Ism:r.ism,Familiya:r.familiya,Ball:r.ball,Vaqt:r.time
     })));
     const wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,ws,"Natijalar");
@@ -182,7 +205,7 @@ function exportExcel(){
 }
 
 function exportPDF(){
-  const { jsPDF } = window.jspdf;
+  const {jsPDF}=window.jspdf;
   const pdf=new jsPDF();
   pdf.text("Test Natijalari",14,15);
   let y=25;
@@ -199,4 +222,3 @@ function exportPDF(){
 
 </body>
 </html>
-
