@@ -194,27 +194,25 @@ function startTimer(){
 
 /* RENDER */
 function render(){
-  const q = test.questions[index];
-  qBox.innerHTML = `
+  const q=test.questions[index];
+  qBox.innerHTML=`
     ${index+1}. ${q.text}
-    ${q.image ? `<img src="${q.image}">` : ""}
+    ${q.image?`<img src="${q.image}">`:""}
   `;
-  options.innerHTML = "";
+  options.innerHTML="";
   for(const k in q.options){
-    const sel = answers[index] === k ? "selected" : "";
-    options.innerHTML += `
+    const sel=selected[index]===k?"selected":"";
+    options.innerHTML+=`
       <div class="option ${sel}" onclick="choose('${k}')">
         ${k}) ${q.options[k]}
       </div>`;
   }
-  finishBtn.style.display =
-    index === test.questions.length-1 ? "block" : "none";
+  finishBtn.style.display=index===test.questions.length-1?"block":"none";
 }
 
-function choose(v){answers[index]=v;render();}
+function choose(v){selected[index]=v;render();}
 function next(){if(index<test.questions.length-1){index++;render();}}
 function prev(){if(index>0){index--;render();}}
-
 
 /* FINISH */
 function finish(){
@@ -271,11 +269,3 @@ async function goResult(){
 
 </body>
 </html>
-
-
-
-
-
-
-
-
