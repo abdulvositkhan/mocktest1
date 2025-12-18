@@ -7,7 +7,6 @@
 
 <style>
 *{box-sizing:border-box;font-family:Arial,sans-serif}
-
 body{
   margin:0;
   min-height:100vh;
@@ -16,7 +15,6 @@ body{
   justify-content:center;
   align-items:center;
 }
-
 .card{
   background:#fff;
   width:100%;
@@ -26,12 +24,7 @@ body{
   border:2px solid #e5e7eb;
   box-shadow:0 25px 50px rgba(0,0,0,0.15);
 }
-
-h2{
-  text-align:center;
-  margin-top:0;
-}
-
+h2{text-align:center;margin-top:0}
 input{
   width:100%;
   padding:14px;
@@ -40,7 +33,6 @@ input{
   border:2px solid #e5e7eb;
   font-size:16px;
 }
-
 button{
   width:100%;
   padding:14px;
@@ -53,14 +45,12 @@ button{
   font-weight:bold;
   cursor:pointer;
 }
-
 .info{
   margin-top:15px;
   text-align:center;
   color:#374151;
   font-size:14px;
 }
-
 .error{
   color:#dc2626;
   font-weight:bold;
@@ -87,8 +77,25 @@ button{
   </div>
 </div>
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <script>
-function start(){
+/* 🔥 FIREBASE CONFIG — O‘ZINGIZNIKI */
+const firebaseConfig = {
+  apiKey: "API_KEY",
+  authDomain: "PROJECT.firebaseapp.com",
+  projectId: "PROJECT_ID",
+  storageBucket: "PROJECT.appspot.com",
+  messagingSenderId: "SENDER_ID",
+  appId: "APP_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+async function start(){
   error.innerText = "";
 
   const ism = document.getElementById("ism").value.trim();
@@ -100,16 +107,19 @@ function start(){
     return;
   }
 
-  const allTests = JSON.parse(localStorage.getItem("allTests")) || {};
-  const test = allTests[testId];
+  /* 🔍 TESTNI SERVERDAN OLISH */
+  const doc = await db.collection("tests").doc(testId).get();
 
-  if(!test){
+  if(!doc.exists){
     error.innerText = "Bunday Test ID topilmadi";
     return;
   }
 
-  /* TIME CHECK */
+  const test = doc.data();
+
+  /* ⏰ TIME CHECK */
   const now = new Date();
+
   if(test.date){
     const today = new Date(test.date);
     if(now.toDateString() !== today.toDateString()){
@@ -138,12 +148,9 @@ function start(){
     }
   }
 
-  /* SAVE USER */
-  localStorage.setItem("currentUser", JSON.stringify({ism,familiya}));
-  localStorage.setItem("currentTestId", testId);
-
-  /* PREVENT DOUBLE START */
-  localStorage.removeItem("viewer");
+  /* 👤 USER INFO (SESSION) */
+  sessionStorage.setItem("currentUser", JSON.stringify({ism,familiya}));
+  sessionStorage.setItem("currentTestId", testId);
 
   location.href = "test.html";
 }
