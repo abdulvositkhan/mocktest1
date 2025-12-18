@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Panel — Test Creator</title>
+<title>Admin Panel — Test yaratish</title>
 
 <style>
-*{box-sizing:border-box;font-family:Arial,sans-serif}
+*{box-sizing:border-box;font-family:Inter,Arial,sans-serif}
 body{
   margin:0;
-  background:#f0fdf4;
   min-height:100vh;
+  background:#f0fdf4;
   display:flex;
   justify-content:center;
   padding:30px
@@ -21,63 +21,47 @@ body{
   background:#fff;
   padding:30px;
   border-radius:22px;
-  border:2px solid #e5e7eb;
-  box-shadow:0 25px 50px rgba(0,0,0,.15)
+  border:1px solid #e5e7eb;
+  box-shadow:0 30px 60px rgba(0,0,0,.12)
 }
-h1,h2{text-align:center;margin-top:0}
+h1,h2{margin-top:0;text-align:center}
 input,textarea,select{
   width:100%;
   padding:12px;
   margin-top:10px;
-  border-radius:10px;
-  border:2px solid #e5e7eb
+  border-radius:12px;
+  border:1.8px solid #e5e7eb;
+  font-size:15px
 }
 textarea{resize:vertical}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 button{
-  padding:12px 18px;
-  font-weight:bold;
+  padding:12px 20px;
   border:none;
-  border-radius:10px;
+  border-radius:12px;
+  font-weight:600;
   cursor:pointer
 }
 .blue{background:#4f46e5;color:#fff}
 .green{background:#16a34a;color:#fff}
 .red{background:#dc2626;color:#fff}
-
 .qbox{
-  border:2px dashed #c7d2fe;
+  border:2px dashed #d1d5db;
   padding:20px;
-  border-radius:16px;
+  border-radius:18px;
   margin-top:20px
 }
 .qitem{
   border:1px solid #e5e7eb;
-  padding:14px;
-  border-radius:14px;
-  margin-top:12px;
+  padding:15px;
+  border-radius:16px;
+  margin-top:15px;
   background:#f9fafb
 }
-.qitem img{
-  max-width:220px;
-  display:block;
-  margin-top:8px;
-  border-radius:10px
-}
-.preview{display:none;margin-top:10px}
-.preview img{max-width:220px;border-radius:10px}
-.footer{
-  margin-top:40px;
-  text-align:center;
-  font-weight:bold;
-  color:#4f46e5
-}
-.actions{
-  display:flex;
-  gap:12px;
-  justify-content:center;
-  margin-top:20px
-}
+.preview{display:none;margin-top:12px}
+.preview img{max-width:220px;border-radius:12px}
+.actions{display:flex;gap:12px;justify-content:center;margin-top:25px}
+.footer{text-align:center;margin-top:40px;color:#6b7280;font-weight:600}
 </style>
 </head>
 
@@ -87,11 +71,12 @@ button{
 if(sessionStorage.getItem("adminAuth")!=="true"){
   location.href="admin-login.html";
 }
+sessionStorage.setItem("viewer","admin");
 </script>
 
 <div class="container">
 
-<h1>🛠 Admin Panel — Test Creator</h1>
+<h1>🛠 Admin Panel — Test yaratish</h1>
 
 <input id="testId" placeholder="Test ID (masalan: MAT2025)">
 
@@ -107,12 +92,20 @@ if(sessionStorage.getItem("adminAuth")!=="true"){
 
 <hr>
 
+<h2>📂 Excel orqali savol yuklash</h2>
+<input type="file" id="excelFile" accept=".xlsx">
+<button class="blue" onclick="loadExcel()">Excel yuklash</button>
+<div id="excelMsg"></div>
+
+<hr>
+
 <h2>✍️ Savol qo‘shish / tahrirlash</h2>
 
 <div class="qbox">
 
 <textarea id="qText" rows="3" placeholder="Savol matni"></textarea>
 
+<input id="imgUrl" placeholder="Rasm URL (ixtiyoriy)">
 <input type="file" id="imgFile" accept="image/*" onchange="previewImage()">
 
 <div class="preview" id="imgPreview">
@@ -132,7 +125,7 @@ if(sessionStorage.getItem("adminAuth")!=="true"){
   <option>D</option>
 </select>
 
-<button class="blue" onclick="saveQuestion()">➕ Saqlash</button>
+<button class="blue" onclick="saveQuestion()">Saqlash</button>
 <div id="count">Savollar: 0 / 50</div>
 
 </div>
@@ -144,7 +137,7 @@ if(sessionStorage.getItem("adminAuth")!=="true"){
 
 <div class="actions">
   <button class="green" onclick="saveTest()">💾 TESTNI SAQLASH</button>
-  <button class="blue" onclick="location.href='results.html'">📊 Natijalar</button>
+  <button class="blue" onclick="location.href='results.html'">📊 Natijalarni ko‘rish</button>
 </div>
 
 <hr>
@@ -159,9 +152,10 @@ if(sessionStorage.getItem("adminAuth")!=="true"){
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <script>
-/* 🔥 FIREBASE */
+/* 🔥 FIREBASE CONFIG */
 firebase.initializeApp({
   apiKey:"AIzaSyDMyRSvTXXxkgTPyeZSeVnpHgh1tH4lJjE",
   authDomain:"mock-8b900.firebaseapp.com",
@@ -170,13 +164,11 @@ firebase.initializeApp({
   messagingSenderId:"316652697568",
   appId:"1:316652697568:web:7b6b24a3aefc44dcd1dd85"
 });
-
 const db = firebase.firestore();
 const storage = firebase.storage();
 
-let questions = [];
-let editIndex = null;
-let editImage = "";
+/* STATE */
+let questions=[], editIndex=null;
 
 /* IMAGE PREVIEW */
 function previewImage(){
@@ -190,49 +182,35 @@ function previewImage(){
   r.readAsDataURL(f);
 }
 
-/* CLEAR FORM */
-function clearForm(){
-  qText.value="";
-  imgFile.value="";
-  previewImg.src="";
-  imgPreview.style.display="none";
-  a.value=b.value=c.value=d.value="";
-  correct.value="";
-  editIndex=null;
-  editImage="";
-}
-
 /* SAVE QUESTION */
 async function saveQuestion(){
-  if(!qText.value || !correct.value){
-    alert("Savol to‘liq emas");
-    return;
-  }
-  if(editIndex===null && questions.length>=50){
-    alert("50 ta savol bo‘ldi");
-    return;
-  }
+  if(!qText.value || !correct.value) return alert("Savol to‘liq emas");
+  if(editIndex===null && questions.length>=50) return alert("50 ta savol bo‘ldi");
 
-  let image = editImage;
-
-  if(imgFile.files.length){
-    const f = imgFile.files[0];
-    const ref = storage.ref(`questions/${Date.now()}_${f.name}`);
-    await ref.put(f);
+  let image = "";
+  if(imgFile.files[0]){
+    const ref = storage.ref("questions/"+Date.now()+"_"+imgFile.files[0].name);
+    await ref.put(imgFile.files[0]);
     image = await ref.getDownloadURL();
+  }else if(imgUrl.value){
+    image = imgUrl.value;
   }
 
   const q = {
     text:qText.value,
-    image:image||"",
+    image,
     options:{A:a.value,B:b.value,C:c.value,D:d.value},
     correct:correct.value
   };
 
-  if(editIndex===null) questions.push(q);
-  else questions[editIndex]=q;
+  editIndex===null ? questions.push(q) : questions[editIndex]=q;
+  editIndex=null;
 
-  clearForm();
+  qText.value=imgUrl.value=a.value=b.value=c.value=d.value="";
+  imgFile.value="";
+  correct.value="";
+  imgPreview.style.display="none";
+
   render();
 }
 
@@ -242,9 +220,9 @@ function render(){
   questions.forEach((q,i)=>{
     questionList.innerHTML+=`
       <div class="qitem">
-        <b>${i+1}. ${q.text}</b>
-        ${q.image?`<img src="${q.image}">`:""}
-        <div>To‘g‘ri: <b>${q.correct}</b></div>
+        <b>${i+1}. ${q.text}</b><br>
+        ${q.image?`<img src="${q.image}" style="max-width:200px;margin-top:8px">`:""}
+        <div><b>To‘g‘ri:</b> ${q.correct}</div>
         <button onclick="editQ(${i})">✏️</button>
         <button class="red" onclick="delQ(${i})">❌</button>
       </div>`;
@@ -252,11 +230,12 @@ function render(){
   count.innerText=`Savollar: ${questions.length} / 50`;
 }
 
+/* EDIT / DELETE */
 function editQ(i){
-  const q = questions[i];
+  const q=questions[i];
   editIndex=i;
-  editImage=q.image||"";
   qText.value=q.text;
+  imgUrl.value=q.image||"";
   a.value=q.options.A;
   b.value=q.options.B;
   c.value=q.options.C;
@@ -267,9 +246,8 @@ function editQ(i){
     imgPreview.style.display="block";
   }
 }
-
 function delQ(i){
-  if(confirm("O‘chirilsinmi?")){
+  if(confirm("Savol o‘chirilsinmi?")){
     questions.splice(i,1);
     render();
   }
@@ -316,18 +294,42 @@ async function loadTest(id){
   end.value=t.end||"";
   duration.value=t.duration||"";
   questions=t.questions||[];
-  clearForm();
   render();
 }
 
 async function deleteTest(id){
-  if(confirm("Test o‘chirilsinmi?")){
-    await db.collection("tests").doc(id).delete();
-    loadSavedTests();
-  }
+  if(!confirm("Test o‘chirilsinmi?")) return;
+  await db.collection("tests").doc(id).delete();
+  loadSavedTests();
+}
+
+/* EXCEL */
+function loadExcel(){
+  const f=excelFile.files[0];
+  if(!f) return;
+  const r=new FileReader();
+  r.onload=e=>{
+    const wb=XLSX.read(new Uint8Array(e.target.result),{type:"array"});
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+    rows.forEach(row=>{
+      const c=(row.Togri||"").toUpperCase();
+      if(row.Savol && ["A","B","C","D"].includes(c) && questions.length<50){
+        questions.push({
+          text:row.Savol,
+          image:row.Rasm||"",
+          options:{A:row.A||"",B:row.B||"",C:row.C||"",D:row.D||""},
+          correct:c
+        });
+      }
+    });
+    render();
+    excelMsg.innerText="✅ Excel yuklandi";
+  };
+  r.readAsArrayBuffer(f);
 }
 
 loadSavedTests();
 </script>
+
 </body>
 </html>
