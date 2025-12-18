@@ -195,13 +195,11 @@ function startTimer(){
 /* RENDER */
 function render(){
  const order = ["A", "B", "C", "D"];
-
 optionsBox.innerHTML = order.map(k => `
   <div class="option">
     <input type="radio" name="answer" value="${k}">
     <label>${k}) ${question.options[k]}</label>
-  </div>
-`).join("");
+
   }
   finishBtn.style.display=index===test.questions.length-1?"block":"none";
 }
@@ -265,6 +263,7 @@ async function goResult(){
 
 </body>
 </html>
+
 
 
 
