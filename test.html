@@ -133,26 +133,20 @@ button{
   </div>
 </div>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-const firebaseConfig={
+firebase.initializeApp({
   apiKey:"AIzaSyDMyRSvTXXxkgTPyeZSeVnpHgh1tH4lJjE",
   authDomain:"mock-8b900.firebaseapp.com",
-  projectId:"mock-8b900",
-  storageBucket:"mock-8b900.appspot.com",
-  messagingSenderId:"316652697568",
-  appId:"1:316652697568:web:7b6b24a3aefc44dcd1dd85"
-};
-firebase.initializeApp(firebaseConfig);
+  projectId:"mock-8b900"
+});
 const db=firebase.firestore();
 
 /* SESSION */
 const testId=sessionStorage.getItem("currentTestId");
 const user=JSON.parse(sessionStorage.getItem("currentUser")||"{}");
-sessionStorage.setItem("viewer","student");
 
 if(!testId||!user.ism){
   alert("Test topilmadi");
@@ -161,7 +155,7 @@ if(!testId||!user.ism){
 
 let test=null;
 let index=0;
-let selected={};
+let answers={};   // ✅ TO‘G‘RI NOM
 let timeLeft=0;
 let isFinished=false;
 
@@ -194,6 +188,8 @@ function startTimer(){
 
 /* RENDER */
 function render(){
+  if(!test || !test.questions || !test.questions[index]) return;
+
   const q = test.questions[index];
 
   qBox.innerHTML = `
@@ -203,27 +199,40 @@ function render(){
 
   options.innerHTML = "";
 
-  const order = ["A","B","C","D"]; // 🔒 qat’iy tartib
+  const order=["A","B","C","D"];
 
   order.forEach(k=>{
-    if(!q.options[k]) return;
+    if(!q.options || !q.options[k]) return;
 
-    const selected = answers[index] === k ? "selected" : "";
+    const selClass = answers[index]===k ? "selected" : "";
 
     options.innerHTML += `
-      <div class="option ${selected}" onclick="choose('${k}')">
+      <div class="option ${selClass}" onclick="choose('${k}')">
         ${k}) ${q.options[k]}
       </div>
     `;
   });
 
   finishBtn.style.display =
-    index === test.questions.length - 1 ? "block" : "none";
+    index===test.questions.length-1 ? "block" : "none";
 }
 
-function choose(v){selected[index]=v;render();}
-function next(){if(index<test.questions.length-1){index++;render();}}
-function prev(){if(index>0){index--;render();}}
+function choose(v){
+  answers[index]=v;
+  render();
+}
+function next(){
+  if(index<test.questions.length-1){
+    index++;
+    render();
+  }
+}
+function prev(){
+  if(index>0){
+    index--;
+    render();
+  }
+}
 
 /* FINISH */
 function finish(){
@@ -231,12 +240,12 @@ function finish(){
   isFinished=true;
 
   let correct=0;
-  const answers=[];
+  const resultAnswers=[];
 
   test.questions.forEach((q,i)=>{
-    const sel=selected[i]||null;
+    const sel=answers[i]||null;
     if(sel===q.correct) correct++;
-    answers.push({
+    resultAnswers.push({
       question:q.text,
       image:q.image||"",
       options:q.options,
@@ -259,7 +268,7 @@ function finish(){
     testId,
     ball,
     time:new Date().toLocaleString(),
-    answers
+    answers:resultAnswers
   };
 
   resultTitle.innerText=title;
@@ -271,7 +280,6 @@ function finish(){
   resultModal.style.display="flex";
 }
 
-/* SAVE RESULT */
 async function goResult(){
   await db.collection("results").add(window.finalResult);
   location.href="results.html";
@@ -280,4 +288,3 @@ async function goResult(){
 
 </body>
 </html>
-
