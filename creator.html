@@ -92,13 +92,6 @@ sessionStorage.setItem("viewer","admin");
 
 <hr>
 
-<h2>📂 Excel orqali savol yuklash</h2>
-<input type="file" id="excelFile" accept=".xlsx">
-<button class="blue" onclick="loadExcel()">Excel yuklash</button>
-<div id="excelMsg"></div>
-
-<hr>
-
 <h2>✍️ Savol qo‘shish / tahrirlash</h2>
 
 <div class="qbox">
@@ -137,13 +130,7 @@ sessionStorage.setItem("viewer","admin");
 
 <div class="actions">
   <button class="green" onclick="saveTest()">💾 TESTNI SAQLASH</button>
-  <button class="blue" onclick="location.href='results.html'">📊 Natijalarni ko‘rish</button>
 </div>
-
-<hr>
-
-<h2>📚 Saqlangan testlar</h2>
-<div id="savedTests"></div>
 
 <div class="footer">@Ped_Life_Uz</div>
 </div>
@@ -151,23 +138,22 @@ sessionStorage.setItem("viewer","admin");
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <script>
 firebase.initializeApp({
   apiKey:"AIzaSyDMyRSvTXXxkgTPyeZSeVnpHgh1tH4lJjE",
   authDomain:"mock-8b900.firebaseapp.com",
   projectId:"mock-8b900",
-  storageBucket:"mock-8b900.appspot.com",
-  messagingSenderId:"316652697568",
-  appId:"1:316652697568:web:7b6b24a3aefc44dcd1dd85"
+  storageBucket:"mock-8b900.appspot.com"
 });
 
 const db = firebase.firestore();
 const storage = firebase.storage();
 
-let questions = [], editIndex = null;
+let questions = [];
+let editIndex = null;
 
+/* PREVIEW */
 function previewImage(){
   const f = imgFile.files[0];
   if(!f) return;
@@ -179,9 +165,9 @@ function previewImage(){
   r.readAsDataURL(f);
 }
 
-/* ✅ FAqat shu funksiya tuzatildi */
+/* SAVE QUESTION — BARQAROR */
 async function saveQuestion(){
-  if(!qText.value || !correct.value) {
+  if(!qText.value || !correct.value){
     alert("Savol to‘liq emas");
     return;
   }
@@ -191,10 +177,8 @@ async function saveQuestion(){
     return;
   }
 
-  // tahrirlashda eski rasmni saqlab qolamiz
-  let image = editIndex !== null ? questions[editIndex].image : "";
+  let image = editIndex!==null ? questions[editIndex].image : "";
 
-  // agar yangi file tanlangan bo‘lsa
   if(imgFile.files[0]){
     try{
       const ref = storage.ref(
@@ -202,50 +186,88 @@ async function saveQuestion(){
       );
       await ref.put(imgFile.files[0]);
       image = await ref.getDownloadURL();
-    }catch(err){
-      console.error("Rasm yuklanmadi:", err);
-      alert("❗ Rasm yuklanmadi (Storage faol emas). Savol rasmsiz saqlandi.");
-      // ❗ image o‘zgarmaydi, lekin saqlash davom etadi
+    }catch(e){
+      alert("⚠️ Rasm yuklanmadi (Storage faol emas). Savol rasmsiz saqlandi.");
     }
-  }
-  // agar URL qo‘lda yozilgan bo‘lsa
-  else if(imgUrl.value){
+  }else if(imgUrl.value){
     image = imgUrl.value.trim();
   }
 
   const q = {
     text: qText.value,
     image,
-    options: {
-      A: a.value,
-      B: b.value,
-      C: c.value,
-      D: d.value
+    options:{
+      A:a.value,
+      B:b.value,
+      C:c.value,
+      D:d.value
     },
     correct: correct.value
   };
 
-  if(editIndex === null){
+  if(editIndex===null){
     questions.push(q);
   }else{
-    questions[editIndex] = q;
-    editIndex = null;
+    questions[editIndex]=q;
+    editIndex=null;
   }
 
-  // formani tozalash
-  qText.value = "";
-  imgUrl.value = "";
-  a.value = b.value = c.value = d.value = "";
-  imgFile.value = "";
-  correct.value = "";
-  imgPreview.style.display = "none";
+  qText.value="";
+  imgUrl.value="";
+  a.value=b.value=c.value=d.value="";
+  imgFile.value="";
+  correct.value="";
+  imgPreview.style.display="none";
 
   render();
 }
 
+/* RENDER */
+function render(){
+  questionList.innerHTML="";
+  questions.forEach((q,i)=>{
+    questionList.innerHTML+=`
+      <div class="qitem">
+        <b>${i+1}. ${q.text}</b><br>
+        ${q.image?`<img src="${q.image}" style="max-width:200px;margin-top:8px">`:""}
+        <div><b>To‘g‘ri:</b> ${q.correct}</div>
+        <button onclick="editQ(${i})">✏️</button>
+        <button class="red" onclick="delQ(${i})">❌</button>
+      </div>
+    `;
+  });
+  count.innerText=`Savollar: ${questions.length} / 50`;
+}
+
+function editQ(i){
+  const q=questions[i];
+  editIndex=i;
+  qText.value=q.text;
+  imgUrl.value=q.image||"";
+  a.value=q.options.A;
+  b.value=q.options.B;
+  c.value=q.options.C;
+  d.value=q.options.D;
+  correct.value=q.correct;
+  imgFile.value="";
+  if(q.image){
+    previewImg.src=q.image;
+    imgPreview.style.display="block";
+  }
+}
+
+function delQ(i){
+  if(confirm("Savol o‘chirilsinmi?")){
+    questions.splice(i,1);
+    render();
+  }
+}
 
 async function saveTest(){
-  if(!testId.value) return alert("Test ID yo‘q");
+  if(!testId.value){
+    alert("Test ID yo‘q");
+    return;
+  }
   await db.collection("tests").doc(testId.value).set({
     date:date.value,
     start:start.value,
@@ -253,73 +275,9 @@ async function saveTest(){
     duration:duration.value,
     questions
   });
-  alert("✅ Test serverga saqlandi");
-  loadSavedTests();
+  alert("✅ Test saqlandi");
 }
-
-async function loadSavedTests(){
-  savedTests.innerHTML="";
-  const snap=await db.collection("tests").get();
-  if(snap.empty){
-    savedTests.innerHTML="<i>Test yo‘q</i>";
-    return;
-  }
-  snap.forEach(d=>{
-    savedTests.innerHTML+=`
-      <div class="qitem">
-        <b>${d.id}</b>
-        <button onclick="loadTest('${d.id}')">✏️</button>
-        <button class="red" onclick="deleteTest('${d.id}')">❌</button>
-      </div>`;
-  });
-}
-
-async function loadTest(id){
-  const d=await db.collection("tests").doc(id).get();
-  const t=d.data();
-  testId.value=id;
-  date.value=t.date||"";
-  start.value=t.start||"";
-  end.value=t.end||"";
-  duration.value=t.duration||"";
-  questions=t.questions||[];
-  render();
-}
-
-async function deleteTest(id){
-  if(!confirm("Test o‘chirilsinmi?")) return;
-  await db.collection("tests").doc(id).delete();
-  loadSavedTests();
-}
-
-function loadExcel(){
-  const f=excelFile.files[0];
-  if(!f) return;
-  const r=new FileReader();
-  r.onload=e=>{
-    const wb=XLSX.read(new Uint8Array(e.target.result),{type:"array"});
-    const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-    rows.forEach(row=>{
-      const c=(row.Togri||"").toUpperCase();
-      if(row.Savol && ["A","B","C","D"].includes(c) && questions.length<50){
-        questions.push({
-          text:row.Savol,
-          image:row.Rasm||"",
-          options:{A:row.A||"",B:row.B||"",C:row.C||"",D:row.D||""},
-          correct:c
-        });
-      }
-    });
-    render();
-    excelMsg.innerText="✅ Excel yuklandi";
-  };
-  r.readAsArrayBuffer(f);
-}
-
-loadSavedTests();
 </script>
 
 </body>
 </html>
-
-
