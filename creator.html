@@ -111,7 +111,11 @@ sessionStorage.setItem("viewer","admin");
 
 <div class="preview" id="imgPreview">
   <img id="previewImg">
+  <button type="button" class="red" onclick="removeImage()" style="margin-top:8px">
+    ❌ Rasmni o‘chirish
+  </button>
 </div>
+
 
 <textarea id="a" rows="2" placeholder="A variant"></textarea>
 <textarea id="b" rows="2" placeholder="B variant"></textarea>
@@ -329,8 +333,24 @@ function loadExcel(){
 }
 
 loadSavedTests();
+  function removeImage(){
+  // preview yo‘qoladi
+  previewImg.src = "";
+  imgPreview.style.display = "none";
+
+  // file va url tozalanadi
+  imgFile.value = "";
+  imgUrl.value = "";
+
+  // agar tahrirlash bo‘lsa — rasmni ham o‘chiramiz
+  if(editIndex !== null){
+    questions[editIndex].image = "";
+  }
+}
+
 </script>
 
 </body>
 </html>
+
 
