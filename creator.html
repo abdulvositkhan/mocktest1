@@ -221,14 +221,31 @@ function render(){
     questionList.innerHTML+=`
       <div class="qitem">
         <b>${i+1}. ${q.text}</b><br>
-        ${q.image?`<img src="${q.image}" style="max-width:200px;margin-top:8px">`:""}
-        <div><b>To‘g‘ri:</b> ${q.correct}</div>
+
+        ${
+          q.image
+          ? `
+            <img src="${q.image}" style="max-width:200px;margin-top:8px"><br>
+            <button class="red" onclick="removeImage(${i})">
+              🗑 Rasmni o‘chirish
+            </button>
+          `
+          : ""
+        }
+
+        <div style="margin-top:8px">
+          <b>To‘g‘ri:</b> ${q.correct}
+        </div>
+
         <button onclick="editQ(${i})">✏️</button>
         <button class="red" onclick="delQ(${i})">❌</button>
-      </div>`;
+      </div>
+    `;
   });
-  count.innerText=`Savollar: ${questions.length} / 50`;
+
+  count.innerText = `Savollar: ${questions.length} / 50`;
 }
+
 function editQ(i){
   const q=questions[i];
   editIndex=i;
@@ -329,7 +346,33 @@ function loadExcel(){
 }
 
 loadSavedTests();
+  async function removeImage(index){
+  const q = questions[index];
+
+  if(!q.image) return;
+
+  if(!confirm("Rasmni butunlay o‘chirmoqchimisiz?")) return;
+
+  try{
+    // 🔥 Storage’dan o‘chirish
+    const ref = firebase.storage().refFromURL(q.image);
+    await ref.delete();
+
+    // 🧹 Savoldan rasmni olib tashlash
+    questions[index].image = "";
+
+    render();
+
+    alert("✅ Rasm muvaffaqiyatli o‘chirildi");
+  }
+  catch(err){
+    console.error("Rasm o‘chmadi:", err);
+    alert("❌ Rasmni o‘chirishda xato bo‘ldi");
+  }
+}
+
 </script>
 
 </body>
 </html>
+
