@@ -304,12 +304,18 @@ function showAnalysis(){
         ${i+1}. ${q.text}
         ${q.image?`<div class="q-image"><img src="${q.image}"></div>`:""}
     `;
-    for(const k in q.options){
-      let cls="option";
-      if(k===q.correct) cls+=" correct";
-      else if(k===q.selected) cls+=" wrong";
-      html+=`<div class="${cls}">${k}) ${q.options[k]}</div>`;
-    }
+    const order = ["A","B","C","D"];
+
+order.forEach(k=>{
+  if(!q.options[k]) return;
+
+  let cls="option";
+  if(k===q.correct) cls+=" correct";
+  else if(k===q.selected) cls+=" wrong";
+
+  html+=`<div class="${cls}">${k}) ${q.options[k]}</div>`;
+});
+
     html+=`
       <div class="note">✔ To‘g‘ri: ${q.correct} | ✖ Siz: ${q.selected||"-"}</div>
       </div>`;
@@ -334,3 +340,4 @@ function showAnalysisFromSaved(r){
 
 </body>
 </html>
+
