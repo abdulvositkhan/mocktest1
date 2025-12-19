@@ -14,66 +14,145 @@ body{
   padding:30px;
 }
 .container{
-  max-width:1200px;
+  max-width:1250px;
   margin:auto;
   background:#fff;
-  padding:32px;
-  border-radius:28px;
+  padding:34px;
+  border-radius:30px;
   box-shadow:0 40px 100px rgba(0,0,0,.15);
 }
-h1{text-align:center;font-size:32px;font-weight:900}
+h1{
+  text-align:center;
+  font-size:34px;
+  font-weight:900;
+  margin-top:0;
+}
 
+/* TEST SELECTOR */
 .test-list{
   display:flex;
   gap:12px;
   flex-wrap:wrap;
   justify-content:center;
-  margin-bottom:24px;
+  margin:25px 0 30px;
 }
 .test-btn{
-  padding:10px 18px;
+  padding:10px 20px;
   border-radius:999px;
   border:none;
   cursor:pointer;
-  font-weight:800;
+  font-weight:900;
   background:#e0e7ff;
+  color:#1e3a8a;
 }
 .test-btn.active{
-  background:#6366f1;
+  background:linear-gradient(135deg,#6366f1,#4f46e5);
   color:#fff;
 }
 
+/* SUMMARY */
+.summary{
+  text-align:center;
+  padding:30px;
+  border-radius:26px;
+  margin-bottom:30px;
+}
+.summary.blue{background:#dbeafe}
+.summary.yellow{background:#fef9c3}
+.summary.orange{background:#ffedd5}
+.summary.red{background:#fee2e2}
+.big{
+  font-size:46px;
+  font-weight:900;
+}
+.badges{
+  display:flex;
+  justify-content:center;
+  gap:16px;
+  margin-top:14px;
+}
+.badge{
+  padding:8px 20px;
+  border-radius:999px;
+  font-weight:900;
+}
+.ok{background:#dcfce7;color:#166534}
+.no{background:#fee2e2;color:#991b1b}
+
+/* TABLE */
 .table{
   width:100%;
   border-collapse:collapse;
+  margin-top:20px;
 }
 th,td{
   padding:14px;
   border-bottom:1px solid #e5e7eb;
   text-align:center;
 }
-th{background:#f1f5f9}
+th{background:#f1f5f9;font-weight:900}
 
 .score{
   padding:6px 16px;
   border-radius:999px;
   font-weight:900;
 }
-.blue{background:#dbeafe;color:#1d4ed8}
-.yellow{background:#fef9c3;color:#854d0e}
-.orange{background:#ffedd5;color:#9a3412}
-.red{background:#fee2e2;color:#991b1b}
+.score.blue{background:#dbeafe;color:#1d4ed8}
+.score.yellow{background:#fef9c3;color:#854d0e}
+.score.orange{background:#ffedd5;color:#9a3412}
+.score.red{background:#fee2e2;color:#991b1b}
 
-.footer{text-align:center;margin-top:30px;font-weight:900;color:#4f46e5}
+/* MODAL */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,.65);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:999;
+}
+.modal-box{
+  background:#fff;
+  width:100%;
+  max-width:900px;
+  max-height:90vh;
+  overflow:auto;
+  padding:32px;
+  border-radius:30px;
+}
+.close{
+  float:right;
+  cursor:pointer;
+  font-weight:900;
+}
+
+.detail{
+  border:1px solid #e5e7eb;
+  border-radius:22px;
+  padding:22px;
+  margin-top:18px;
+}
+.option{margin-top:6px;font-weight:700}
+.correct{color:#16a34a}
+.wrong{color:#dc2626}
+
+.footer{
+  text-align:center;
+  margin-top:40px;
+  font-weight:900;
+  color:#4f46e5;
+}
 </style>
 </head>
 
 <body>
 
 <div class="container">
-  <h1>📊 Test Natijalari (Admin)</h1>
+  <h1>📊 Test Natijalari</h1>
 
-  <div id="tests" class="test-list"></div>
+  <div id="testList" class="test-list"></div>
+  <div id="summary"></div>
 
   <table class="table">
     <thead>
@@ -83,12 +162,21 @@ th{background:#f1f5f9}
         <th>Familiya</th>
         <th>Ball</th>
         <th>Vaqt</th>
+        <th></th>
       </tr>
     </thead>
     <tbody id="rows"></tbody>
   </table>
 
   <div class="footer">@Ped_Life_Uz</div>
+</div>
+
+<div class="modal" id="detailModal">
+  <div class="modal-box">
+    <span class="close" onclick="detailModal.style.display='none'">✖</span>
+    <h2>🧠 Test tahlili</h2>
+    <div id="modalDetails"></div>
+  </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -102,44 +190,50 @@ firebase.initializeApp({
 });
 const db=firebase.firestore();
 
-sessionStorage.setItem("viewer","admin"); // 🔒 MAJBURIY ADMIN
+const viewer = sessionStorage.getItem("viewer")==="admin" ? "admin" : "student";
+const user = JSON.parse(sessionStorage.getItem("currentUser")||"{}");
 
+const testList=document.getElementById("testList");
 const rows=document.getElementById("rows");
-const testsDiv=document.getElementById("tests");
+const summary=document.getElementById("summary");
+const modalDetails=document.getElementById("modalDetails");
 
 let allResults=[];
-let currentTest=null;
+let currentTestId=null;
 
 db.collection("results")
   .orderBy("ball","desc")
   .get()
   .then(snap=>{
     snap.forEach(d=>allResults.push(d.data()));
-    renderTests();
+    if(viewer==="admin") renderTests();
+    else renderStudent();
   });
 
+/* ADMIN */
 function renderTests(){
   const testIds=[...new Set(allResults.map(r=>r.testId))];
-  testsDiv.innerHTML="";
+  testList.innerHTML="";
   testIds.forEach(id=>{
     const btn=document.createElement("button");
     btn.className="test-btn";
     btn.innerText=id;
     btn.onclick=()=>selectTest(id,btn);
-    testsDiv.appendChild(btn);
+    testList.appendChild(btn);
   });
 }
 
 function selectTest(id,btn){
-  currentTest=id;
+  currentTestId=id;
   document.querySelectorAll(".test-btn").forEach(b=>b.classList.remove("active"));
   btn.classList.add("active");
-  renderTable();
+  renderAdminTable();
 }
 
-function renderTable(){
+function renderAdminTable(){
   rows.innerHTML="";
-  const list=allResults.filter(r=>r.testId===currentTest);
+  summary.innerHTML="";
+  const list=allResults.filter(r=>r.testId===currentTestId);
 
   list.forEach((r,i)=>{
     let cls="red";
@@ -154,9 +248,54 @@ function renderTable(){
         <td>${r.familiya}</td>
         <td><span class="score ${cls}">${r.ball} ball</span></td>
         <td>${r.time}</td>
-      </tr>
-    `;
+        <td><button onclick='openDetail(${JSON.stringify(r)})'>Ko‘rish</button></td>
+      </tr>`;
   });
+}
+
+/* STUDENT */
+function renderStudent(){
+  testList.style.display="none";
+  const r=allResults
+    .filter(x=>x.ism===user.ism&&x.familiya===user.familiya)
+    .sort((a,b)=>new Date(b.time)-new Date(a.time))[0];
+  if(!r) return;
+
+  let cls="red",txt="Testdan o‘tmadingiz";
+  if(r.ball>=80){cls="blue";txt="Oliy toifa";}
+  else if(r.ball>=70){cls="yellow";txt="Birinchi toifa";}
+  else if(r.ball>=60){cls="orange";txt="Ikkinchi toifa";}
+
+  summary.innerHTML=`
+    <div class="summary ${cls}">
+      <div class="big">${r.ball} ball</div>
+      <div>${txt}</div>
+      <div class="badges">
+        <div class="badge ok">To‘g‘ri: ${r.answers.filter(a=>a.selected===a.correct).length}</div>
+        <div class="badge no">Noto‘g‘ri: ${r.answers.length-r.answers.filter(a=>a.selected===a.correct).length}</div>
+      </div>
+    </div>`;
+}
+
+/* DETAIL */
+function openDetail(r){
+  modalDetails.innerHTML="";
+  r.answers.forEach((a,i)=>{
+    let html=`
+      <div class="detail">
+        <b>${i+1}. ${a.question}</b><br>
+        ${a.image?`<img src="${a.image}" style="max-width:240px;margin:10px 0">`:""}
+    `;
+    for(const k in a.options){
+      let cls="option";
+      if(k===a.correct) cls+=" correct";
+      if(k===a.selected&&k!==a.correct) cls+=" wrong";
+      html+=`<div class="${cls}">${k}) ${a.options[k]}</div>`;
+    }
+    html+=`</div>`;
+    modalDetails.innerHTML+=html;
+  });
+  detailModal.style.display="flex";
 }
 </script>
 
