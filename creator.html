@@ -393,7 +393,6 @@ async function loadSavedTests(){
         <b>${d.id}</b>
         <span class="badge">v${d.data().version||1}</span>
         <button class="blue" onclick="loadTest('${d.id}')">✏️</button>
-        <button class="red" onclick="deleteTest('${d.id}')">🗑 O‘chirish</button>
       </div>`;
   });
 }
@@ -410,23 +409,6 @@ async function loadTest(id){
   render();
 }
 
-  sync function deleteTest(id){
-  const ok = confirm(
-    `⚠️ "${id}" testini o‘chirmoqchimisiz?\n\n` +
-    "Bu amalni ORQAGA QAYTARIB BO‘LMAYDI!"
-  );
-
-  if(!ok) return;
-
-  try{
-    await db.collection("tests").doc(id).delete();
-    showModal("Muvaffaqiyat", `"${id}" testi o‘chirildi`);
-    loadSavedTests();
-  }catch(err){
-    showModal("Xatolik", "Testni o‘chirishda xatolik yuz berdi");
-  }
-}
-  
 /* EXCEL */
 function loadExcel(){
   const f=excelFile.files[0];
