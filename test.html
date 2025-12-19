@@ -15,18 +15,14 @@ body{
   justify-content:center;
   padding:30px;
 }
-
-/* MAIN CARD */
 .container{
   width:100%;
-  max-width:920px;
+  max-width:960px;
   background:#fff;
   padding:32px;
   border-radius:28px;
-  box-shadow:0 35px 90px rgba(0,0,0,.15);
+  box-shadow:0 40px 100px rgba(0,0,0,.15);
 }
-
-/* TIMER */
 .timer{
   position:fixed;
   top:20px;
@@ -38,33 +34,37 @@ body{
   font-size:20px;
   font-weight:900;
 }
-
-/* QUESTION */
+.banner{
+  background:#fff7ed;
+  border:2px solid #f59e0b;
+  padding:18px;
+  border-radius:20px;
+  font-weight:800;
+  text-align:center;
+  margin-bottom:20px;
+}
 .question-box{
-  min-height:220px;               /* 🔑 sakramasligi uchun */
+  min-height:240px;
   border:2px solid #e5e7eb;
-  border-radius:22px;
-  padding:24px;
+  border-radius:24px;
+  padding:26px;
   font-size:22px;
   font-weight:800;
   background:#f8fafc;
 }
-.question-text{margin-bottom:12px}
-.image-wrap{
-  margin-top:12px;
+.q-image{
+  margin-top:14px;
   max-height:220px;
   overflow:hidden;
   border-radius:14px;
 }
-.image-wrap img{
+.q-image img{
   max-width:100%;
   max-height:220px;
   object-fit:contain;
   display:block;
   margin:auto;
 }
-
-/* OPTIONS */
 .option{
   display:flex;
   align-items:center;
@@ -93,8 +93,8 @@ body{
   background:#4f46e5;
   border-color:#4f46e5;
 }
-
-/* NAV */
+.option.correct{background:#dcfce7;border-color:#16a34a}
+.option.wrong{background:#fee2e2;border-color:#dc2626}
 .nav{
   display:flex;
   justify-content:space-between;
@@ -115,8 +115,6 @@ button{
   margin-top:28px;
   background:linear-gradient(135deg,#22c55e,#16a34a);
 }
-
-/* RESULT MODAL */
 .modal{
   position:fixed;
   inset:0;
@@ -127,46 +125,20 @@ button{
   z-index:999;
 }
 .modal-box{
-  background:linear-gradient(135deg,#ffffff,#f8fafc);
+  background:#fff;
   padding:40px;
-  border-radius:28px;
+  border-radius:30px;
   width:100%;
   max-width:520px;
   text-align:center;
   box-shadow:0 40px 120px rgba(0,0,0,.4);
 }
-.modal-title{
-  font-size:26px;
-  font-weight:900;
-}
-.score{
-  font-size:48px;
-  font-weight:900;
-  margin:16px 0;
-}
-.badges{
-  display:flex;
-  justify-content:center;
-  gap:12px;
-  margin:18px 0;
-}
-.badge{
-  padding:8px 18px;
-  border-radius:999px;
-  font-weight:900;
-}
+.score{font-size:48px;font-weight:900}
+.badges{display:flex;justify-content:center;gap:14px;margin:16px 0}
+.badge{padding:8px 18px;border-radius:999px;font-weight:900}
 .ok{background:#dcfce7;color:#166534}
 .no{background:#fee2e2;color:#991b1b}
-.info{color:#475569;font-weight:700}
-
-/* ANALYSIS */
-.correct{background:#dcfce7;border-color:#16a34a}
-.wrong{background:#fee2e2;border-color:#dc2626}
-.note{
-  margin-top:8px;
-  font-size:15px;
-  font-weight:700;
-}
+.note{margin-top:8px;font-weight:700}
 </style>
 </head>
 
@@ -174,39 +146,17 @@ button{
 
 <div class="timer" id="timer"></div>
 
-<div class="container" id="main">
-  <div class="question-box">
-    <div class="question-text" id="qText"></div>
-    <div class="image-wrap" id="qImgWrap" style="display:none">
-      <img id="qImg">
-    </div>
-  </div>
+<div class="container" id="main"></div>
 
-  <div id="options"></div>
-
-  <div class="nav">
-    <button onclick="prev()">⬅ Oldingi</button>
-    <button onclick="next()">Keyingi ➡</button>
-  </div>
-
-  <button class="finish" id="finishBtn" onclick="finish()" style="display:none">
-    TESTNI YAKUNLASH
-  </button>
-</div>
-
-<!-- RESULT MODAL -->
 <div class="modal" id="resultModal">
   <div class="modal-box">
-    <div class="modal-title" id="resultTitle"></div>
+    <h2 id="resultTitle"></h2>
     <div class="score" id="resultScore"></div>
-
     <div class="badges">
       <div class="badge ok" id="okCount"></div>
       <div class="badge no" id="noCount"></div>
     </div>
-
-    <div class="info">Natijani ko‘rib chiqishingiz mumkin</div>
-    <button style="margin-top:20px" onclick="showAnalysis()">Davom etish</button>
+    <button onclick="showAnalysis()">Davom etish</button>
   </div>
 </div>
 
@@ -225,87 +175,129 @@ const testId=sessionStorage.getItem("currentTestId");
 const user=JSON.parse(sessionStorage.getItem("currentUser")||"{}");
 if(!testId||!user.ism) location.href="index.html";
 
-let test,index=0,answers={},timeLeft=0,finished=false,finalData=null;
+let deviceId=localStorage.getItem("deviceId");
+if(!deviceId){
+  deviceId=crypto.randomUUID();
+  localStorage.setItem("deviceId",deviceId);
+}
 
-db.collection("tests").doc(testId).get().then(d=>{
+let test,index=0,answers={},timeLeft=0,finalResult=null,interval=null;
+
+function saveProgress(){
+  localStorage.setItem("progress_"+testId,JSON.stringify({
+    testId,deviceId,index,answers,timeLeft,version:test.version||1
+  }));
+}
+
+function loadProgress(){
+  const raw=localStorage.getItem("progress_"+testId);
+  if(!raw) return false;
+  const p=JSON.parse(raw);
+  if(p.deviceId!==deviceId||p.version!==(test.version||1)) return false;
+  index=p.index||0;
+  answers=p.answers||{};
+  timeLeft=p.timeLeft||timeLeft;
+  return true;
+}
+
+db.collection("tests").doc(testId).get().then(async d=>{
   test=d.data();
+  const ver=test.version||1;
+
+  const snap=await db.collection("results")
+    .where("testId","==",testId)
+    .where("ism","==",user.ism)
+    .where("familiya","==",user.familiya)
+    .where("deviceId","==",deviceId)
+    .limit(1).get();
+
+  if(!snap.empty && snap.docs[0].data().testVersion===ver){
+    showClosed(snap.docs[0].data());
+    return;
+  }
+
   timeLeft=Number(test.duration||60)*60;
+  loadProgress();
   startTimer();
   render();
 });
 
 function startTimer(){
-  const t=setInterval(()=>{
-    const m=Math.floor(timeLeft/60);
-    const s=timeLeft%60;
-    timer.innerText=`⏱ ${m}:${String(s).padStart(2,"0")}`;
+  interval=setInterval(()=>{
+    timer.innerText=`⏱ ${Math.floor(timeLeft/60)}:${String(timeLeft%60).padStart(2,"0")}`;
     timeLeft--;
-    if(timeLeft<0){clearInterval(t);finish();}
+    saveProgress();
+    if(timeLeft<0){clearInterval(interval);finish();}
   },1000);
 }
 
 function render(){
   const q=test.questions[index];
-  qText.innerText=`${index+1}. ${q.text}`;
-
-  if(q.image){
-    qImg.src=q.image;
-    qImgWrap.style.display="block";
-  }else{
-    qImgWrap.style.display="none";
-  }
-
-  options.innerHTML="";
-  ["A","B","C","D"].forEach(k=>{
-    if(!q.options[k]) return;
-    options.innerHTML+=`
+  let html=`
+    <div class="question-box">
+      ${index+1}. ${q.text}
+      ${q.image?`<div class="q-image"><img src="${q.image}"></div>`:""}
+    </div>`;
+  for(const k in q.options){
+    html+=`
       <div class="option ${answers[index]===k?"selected":""}" onclick="choose('${k}')">
         ${k}) ${q.options[k]}
       </div>`;
-  });
-
-  finishBtn.style.display=index===test.questions.length-1?"block":"none";
+  }
+  html+=`
+    <div class="nav">
+      <button onclick="prev()">⬅ Oldingi</button>
+      <button onclick="next()">Keyingi ➡</button>
+    </div>
+    ${index===test.questions.length-1?'<button class="finish" onclick="finish()">TESTNI YAKUNLASH</button>':""}
+  `;
+  main.innerHTML=html;
 }
-function choose(v){answers[index]=v;render();}
-function next(){if(index<test.questions.length-1){index++;render();}}
-function prev(){if(index>0){index--;render();}}
+
+function choose(v){answers[index]=v;saveProgress();render();}
+function next(){if(index<test.questions.length-1){index++;saveProgress();render();}}
+function prev(){if(index>0){index--;saveProgress();render();}}
 
 function finish(){
-  if(finished) return;
-  finished=true;
+  clearInterval(interval);
+  localStorage.removeItem("progress_"+testId);
 
   let correct=0;
-  const list=[];
+  const full=[];
   test.questions.forEach((q,i)=>{
     if(answers[i]===q.correct) correct++;
-    list.push({...q,selected:answers[i]||null});
+    full.push({...q,selected:answers[i]||null});
   });
 
-  const ball=correct*2;
-  let title="❌ Attestatsiya Mock testidan o‘tmadingiz";
-  if(ball>=80) title="🔵 Oliy toifa";
-  else if(ball>=70) title="🟡 Birinchi toifa";
-  else if(ball>=60) title="🟠 Ikkinchi toifa";
+  finalResult={answers:full};
+  resultTitle.innerText="Test yakunlandi";
+  resultScore.innerText=(correct*2)+" ball";
+  okCount.innerText="To‘g‘ri: "+correct;
+  noCount.innerText="Noto‘g‘ri: "+(full.length-correct);
 
-  finalData={ball,correct,wrong:list.length-correct,list};
+  db.collection("results").add({
+    testId,
+    testVersion:test.version||1,
+    deviceId,
+    ism:user.ism,
+    familiya:user.familiya,
+    ball:correct*2,
+    answers:full,
+    time:new Date().toLocaleString()
+  });
 
-  resultTitle.innerText=title;
-  resultScore.innerText=`${ball} ball`;
-  okCount.innerText=`To‘g‘ri: ${correct}`;
-  noCount.innerText=`Noto‘g‘ri: ${list.length-correct}`;
   resultModal.style.display="flex";
 }
 
 function showAnalysis(){
   resultModal.style.display="none";
   timer.style.display="none";
-
   let html="<h2>📊 Test tahlili</h2>";
-  finalData.list.forEach((q,i)=>{
+  finalResult.answers.forEach((q,i)=>{
     html+=`
       <div class="question-box" style="margin-top:20px">
         ${i+1}. ${q.text}
-        ${q.image?`<div class="image-wrap"><img src="${q.image}"></div>`:""}
+        ${q.image?`<div class="q-image"><img src="${q.image}"></div>`:""}
     `;
     for(const k in q.options){
       let cls="option";
@@ -314,10 +306,24 @@ function showAnalysis(){
       html+=`<div class="${cls}">${k}) ${q.options[k]}</div>`;
     }
     html+=`
-      <div class="note">✔ To‘g‘ri javob: ${q.correct} | ✖ Sizning javobingiz: ${q.selected||"-"}</div>
+      <div class="note">✔ To‘g‘ri: ${q.correct} | ✖ Siz: ${q.selected||"-"}</div>
       </div>`;
   });
   main.innerHTML=html;
+}
+
+function showClosed(r){
+  main.innerHTML=`
+    <div class="banner">
+      Siz bu testni topshirgansiz. Test qayta ochilgandan keyin yana topshira olasiz.
+      <br><br>
+      <button onclick='showAnalysisFromSaved(${JSON.stringify(r)})'>📊 Tahlilni ko‘rish</button>
+    </div>`;
+}
+
+function showAnalysisFromSaved(r){
+  finalResult=r;
+  showAnalysis();
 }
 </script>
 
