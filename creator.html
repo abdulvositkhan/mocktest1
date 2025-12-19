@@ -63,6 +63,29 @@ button{
 .preview img{max-width:220px;border-radius:12px}
 .actions{display:flex;gap:12px;justify-content:center;margin-top:25px}
 .footer{text-align:center;margin-top:40px;color:#6b7280;font-weight:600}
+  .edit-btn{
+  margin-top:10px;
+  background:#f59e0b;
+  color:white;
+  border:none;
+  padding:8px 14px;
+  border-radius:10px;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.edit-btn:hover{
+  background:#d97706;
+}
+
+.red{
+  background:#dc2626;
+  color:#fff;
+}
+.red:hover{
+  background:#b91c1c;
+}
+
 </style>
 </head>
 
@@ -111,10 +134,12 @@ sessionStorage.setItem("viewer","admin");
 
 <div class="preview" id="imgPreview">
   <img id="previewImg">
-  <button type="button" class="red" onclick="removeImage()" style="margin-top:8px">
-    ❌ Rasmni o‘chirish
+  <br>
+  <button type="button" class="red" onclick="removeImage()">
+    🗑 Rasmni o‘chirish
   </button>
 </div>
+
 
 
 <textarea id="a" rows="2" placeholder="A variant"></textarea>
@@ -220,19 +245,31 @@ async function saveQuestion(){
 }
 
 function render(){
-  questionList.innerHTML="";
+  questionList.innerHTML = "";
+
   questions.forEach((q,i)=>{
-    questionList.innerHTML+=`
+    questionList.innerHTML += `
       <div class="qitem">
         <b>${i+1}. ${q.text}</b><br>
-        ${q.image?`<img src="${q.image}" style="max-width:200px;margin-top:8px">`:""}
-        <div><b>To‘g‘ri:</b> ${q.correct}</div>
-        <button onclick="editQ(${i})">✏️</button>
-        <button class="red" onclick="delQ(${i})">❌</button>
-      </div>`;
+
+        ${q.image ? `
+          <img src="${q.image}" style="max-width:200px;margin-top:8px;border-radius:10px">
+        ` : ""}
+
+        <div style="margin-top:6px">
+          <b>To‘g‘ri:</b> ${q.correct}
+        </div>
+
+        <button class="edit-btn" onclick="editQ(${i})">
+          ✏️ Tahrirlash
+        </button>
+      </div>
+    `;
   });
-  count.innerText=`Savollar: ${questions.length} / 50`;
+
+  count.innerText = `Savollar: ${questions.length} / 50`;
 }
+
 function editQ(i){
   const q=questions[i];
   editIndex=i;
@@ -261,14 +298,22 @@ function delQ(i){
 }
 
 async function saveTest(){
+async function saveTest(){
   if(!testId.value) return alert("Test ID yo‘q");
+
+  if(questions.length !== 50){
+    alert("❗ Testda aynan 50 ta savol bo‘lishi shart");
+    return;
+  }
+
   await db.collection("tests").doc(testId.value).set({
-    date:date.value,
-    start:start.value,
-    end:end.value,
-    duration:duration.value,
+    date: date.value,
+    start: start.value,
+    end: end.value,
+    duration: duration.value,
     questions
   });
+
   alert("✅ Test serverga saqlandi");
   loadSavedTests();
 }
@@ -333,16 +378,13 @@ function loadExcel(){
 }
 
 loadSavedTests();
-  function removeImage(){
-  // preview yo‘qoladi
+function removeImage(){
+  imgFile.value = "";
+  imgUrl.value = "";
   previewImg.src = "";
   imgPreview.style.display = "none";
 
-  // file va url tozalanadi
-  imgFile.value = "";
-  imgUrl.value = "";
-
-  // agar tahrirlash bo‘lsa — rasmni ham o‘chiramiz
+  // agar tahrirlash bo‘layotgan bo‘lsa
   if(editIndex !== null){
     questions[editIndex].image = "";
   }
@@ -352,5 +394,6 @@ loadSavedTests();
 
 </body>
 </html>
+
 
 
