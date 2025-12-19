@@ -232,27 +232,41 @@ function startTimer(){
 }
 
 function render(){
-  const q=test.questions[index];
-  let html=`
-    <div class="question-box">
-      ${index+1}. ${q.text}
-      ${q.image?`<div class="q-image"><img src="${q.image}"></div>`:""}
-    </div>`;
-  for(const k in q.options){
-    html+=`
-      <div class="option ${answers[index]===k?"selected":""}" onclick="choose('${k}')">
-        ${k}) ${q.options[k]}
-      </div>`;
-  }
-  html+=`
-    <div class="nav">
-      <button onclick="prev()">⬅ Oldingi</button>
-      <button onclick="next()">Keyingi ➡</button>
+  if(!test || !test.questions || !test.questions[index]) return;
+
+  const q = test.questions[index];
+
+  qBox.innerHTML = `
+    <div class="q-title">
+      ${index + 1}. ${q.text}
     </div>
-    ${index===test.questions.length-1?'<button class="finish" onclick="finish()">TESTNI YAKUNLASH</button>':""}
+    ${q.image ? `<div class="q-image"><img src="${q.image}"></div>` : ""}
   `;
-  main.innerHTML=html;
+
+  options.innerHTML = "";
+
+  const order = ["A","B","C","D"]; // 🔒 QAT'IY TARTIB
+
+  order.forEach(letter=>{
+    if(!q.options || !q.options[letter]) return;
+
+    const isSelected = answers[index] === letter;
+
+    options.innerHTML += `
+      <div class="option ${isSelected ? "selected" : ""}"
+           onclick="choose('${letter}')">
+        <span class="radio ${isSelected ? "on" : ""}"></span>
+        <span class="opt-text">
+          <b>${letter})</b> ${q.options[letter]}
+        </span>
+      </div>
+    `;
+  });
+
+  finishBtn.style.display =
+    index === test.questions.length - 1 ? "block" : "none";
 }
+
 
 function choose(v){answers[index]=v;saveProgress();render();}
 function next(){if(index<test.questions.length-1){index++;saveProgress();render();}}
@@ -329,3 +343,4 @@ function showAnalysisFromSaved(r){
 
 </body>
 </html>
+
