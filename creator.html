@@ -170,49 +170,102 @@ const storage = firebase.storage();
 let questions = [], editIndex = null;
 
 function previewImage(){
+function previewImage(){
   const f = imgFile.files[0];
   if(!f) return;
+
   const r = new FileReader();
   r.onload = e=>{
     previewImg.src = e.target.result;
-    imgPreview.style.display="block";
+    imgPreview.style.display = "block";
+    removeImgBtn.style.display = "inline-block"; // ✅ tugma chiqadi
   };
   r.readAsDataURL(f);
 }
 
 /* ✅ FAqat shu funksiya tuzatildi */
 async function saveQuestion(){
-  if(!qText.value || !correct.value) return alert("Savol to‘liq emas");
-  if(editIndex===null && questions.length>=50) return alert("50 ta savol bo‘ldi");
+ async function saveQuestion(){
+  try {
+    if(!qText.value || !correct.value){
+      alert("Savol to‘liq emas");
+      return;
+    }
 
-  let image = editIndex !== null ? questions[editIndex].image : "";
+    if(editIndex === null && questions.length >= 50){
+      alert("50 ta savol bo‘ldi");
+      return;
+    }
 
-  if(imgFile.files[0]){
-    const ref = storage.ref(
-      "questions/" + Date.now() + "_" + imgFile.files[0].name
-    );
-    await ref.put(imgFile.files[0]);
-    image = await ref.getDownloadURL();
-  } else if(imgUrl.value){
-    image = imgUrl.value.trim();
+    let oldImage = "";
+    let image = "";
+
+    // tahrirlash bo‘lsa eski rasmni eslab qolamiz
+    if(editIndex !== null){
+      oldImage = questions[editIndex].image || "";
+      image = oldImage;
+    }
+
+    // 🔥 YANGI FILE TANLANGAN BO‘LSA
+    if(imgFile.files.length > 0){
+      const file = imgFile.files[0];
+
+      // 1️⃣ Yangi rasmni yuklash
+      const ref = storage
+        .ref()
+        .child("questions/" + Date.now() + "_" + file.name);
+
+      const snap = await ref.put(file);
+      image = await snap.ref.getDownloadURL();
+
+      // 2️⃣ ESKI RASMNI O‘CHIRISH (agar bo‘lsa)
+      if(oldImage){
+        try{
+          await firebase.storage().refFromURL(oldImage).delete();
+        }catch(e){
+          console.warn("Eski rasm o‘chmadi:", e);
+        }
+      }
+    }
+    // agar URL qo‘lda yozilgan bo‘lsa
+    else if(imgUrl.value.trim() !== ""){
+      image = imgUrl.value.trim();
+    }
+
+    const q = {
+      text: qText.value.trim(),
+      image,
+      options:{
+        A: a.value.trim(),
+        B: b.value.trim(),
+        C: c.value.trim(),
+        D: d.value.trim()
+      },
+      correct: correct.value
+    };
+
+    if(editIndex === null){
+      questions.push(q);
+    } else {
+      questions[editIndex] = q;
+      editIndex = null;
+    }
+
+    // tozalash
+    qText.value = "";
+    imgUrl.value = "";
+    a.value = b.value = c.value = d.value = "";
+    imgFile.value = "";
+    correct.value = "";
+    imgPreview.style.display = "none";
+    removeImgBtn.style.display = "none";
+
+    render();
+
+  } catch(err){
+    console.error("Saqlashda xato:", err);
+    alert("Rasm yuklashda xato bo‘ldi");
   }
-
-  const q = {
-    text: qText.value,
-    image,
-    options:{A:a.value,B:b.value,C:c.value,D:d.value},
-    correct: correct.value
-  };
-
-  editIndex===null ? questions.push(q) : questions[editIndex]=q;
-  editIndex=null;
-
-  qText.value = imgUrl.value = a.value = b.value = c.value = d.value = "";
-  imgFile.value = "";
-  correct.value = "";
-  imgPreview.style.display="none";
-
-  render();
 }
 
 function render(){
@@ -247,21 +300,31 @@ function render(){
 }
 
 function editQ(i){
-  const q=questions[i];
-  editIndex=i;
-  qText.value=q.text;
-  imgUrl.value=q.image||"";
-  a.value=q.options.A;
-  b.value=q.options.B;
-  c.value=q.options.C;
-  d.value=q.options.D;
-  correct.value=q.correct;
+  function editQ(i){
+  const q = questions[i];
+  editIndex = i;
 
-  imgFile.value = "";          // ✅ MUHIM: eski file state tozalanadi
+  qText.value = q.text;
+  imgUrl.value = q.image || "";
 
+  a.value = q.options.A;
+  b.value = q.options.B;
+  c.value = q.options.C;
+  d.value = q.options.D;
+  correct.value = q.correct;
+
+  // ❗ file input hech qachon to‘ldirilmaydi
+  imgFile.value = "";
+
+  // ✅ MUHIM JOY — rasmni URL orqali qayta ko‘rsatish
   if(q.image){
-    previewImg.src=q.image;
-    imgPreview.style.display="block";
+    previewImg.src = q.image;
+    imgPreview.style.display = "block";
+    removeImgBtn.style.display = "inline-block";
+  } else {
+    previewImg.src = "";
+    imgPreview.style.display = "none";
+    removeImgBtn.style.display = "none";
   }
 }
 
@@ -346,33 +409,9 @@ function loadExcel(){
 }
 
 loadSavedTests();
-  async function removeImage(index){
-  const q = questions[index];
-
-  if(!q.image) return;
-
-  if(!confirm("Rasmni butunlay o‘chirmoqchimisiz?")) return;
-
-  try{
-    // 🔥 Storage’dan o‘chirish
-    const ref = firebase.storage().refFromURL(q.image);
-    await ref.delete();
-
-    // 🧹 Savoldan rasmni olib tashlash
-    questions[index].image = "";
-
-    render();
-
-    alert("✅ Rasm muvaffaqiyatli o‘chirildi");
-  }
-  catch(err){
-    console.error("Rasm o‘chmadi:", err);
-    alert("❌ Rasmni o‘chirishda xato bo‘ldi");
-  }
-}
-
 </script>
 
 </body>
 </html>
+
 
