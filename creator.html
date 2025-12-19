@@ -6,85 +6,78 @@
 <title>Admin Panel — Test yaratish</title>
 
 <style>
-*{box-sizing:border-box;font-family:Inter,Arial,sans-serif}
+*{box-sizing:border-box;font-family:Inter,system-ui,Arial}
 body{
   margin:0;
   min-height:100vh;
   background:linear-gradient(135deg,#ecfeff,#f0fdf4);
+  padding:30px;
   display:flex;
-  justify-content:center;
-  padding:30px
+  justify-content:center
 }
 .container{
   width:100%;
   max-width:1200px;
   background:#fff;
-  padding:30px;
-  border-radius:22px;
-  border:1px solid #e5e7eb;
-  box-shadow:0 30px 60px rgba(0,0,0,.12)
+  padding:32px;
+  border-radius:26px;
+  box-shadow:0 30px 80px rgba(0,0,0,.15)
 }
 h1,h2{text-align:center;margin-top:0}
 input,textarea,select{
   width:100%;
-  padding:12px;
+  padding:14px;
   margin-top:10px;
-  border-radius:12px;
-  border:1.8px solid #e5e7eb;
-  font-size:15px
+  border-radius:14px;
+  border:2px solid #e5e7eb;
+  font-size:15px;
+  transition:.2s
+}
+input:focus,textarea:focus,select:focus{
+  outline:none;
+  border-color:#6366f1;
+  box-shadow:0 0 0 3px rgba(99,102,241,.2)
 }
 textarea{resize:vertical}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 button{
-  padding:12px 20px;
+  padding:13px 22px;
   border:none;
-  border-radius:12px;
-  font-weight:600;
-  cursor:pointer
-}
-.blue{background:#4f46e5;color:#fff}
-.green{background:#16a34a;color:#fff}
-.red{background:#dc2626;color:#fff}
-
-.edit-btn{
-  margin-top:10px;
-  background:#f59e0b;
-  color:white;
-  border:none;
-  padding:8px 14px;
-  border-radius:10px;
-  font-weight:600;
+  border-radius:14px;
+  font-weight:700;
   cursor:pointer;
+  transition:.2s
 }
-.edit-btn:hover{background:#d97706}
-
+.blue{background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff}
+.green{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff}
+button:hover{transform:translateY(-1px)}
 .qbox{
-  border:2px dashed #d1d5db;
-  padding:20px;
-  border-radius:18px;
-  margin-top:20px
+  border:2px dashed #c7d2fe;
+  padding:22px;
+  border-radius:22px;
+  margin-top:22px;
+  background:#f8fafc
 }
 .qitem{
   border:1px solid #e5e7eb;
-  padding:15px;
-  border-radius:16px;
-  margin-top:15px;
-  background:#f9fafb
+  padding:18px;
+  border-radius:18px;
+  margin-top:14px;
+  background:#fff
 }
-.preview{display:none;margin-top:12px}
-.preview img{max-width:220px;border-radius:12px;display:block}
-
-.image-actions{display:flex;gap:10px;margin-top:8px}
-
-.actions{display:flex;gap:12px;justify-content:center;margin-top:25px}
-.footer{text-align:center;margin-top:40px;color:#6b7280;font-weight:600}
-
-#uploadStatus{
-  display:none;
-  margin-top:8px;
-  font-weight:600;
-  color:#2563eb
+.preview img{max-width:240px;border-radius:14px;margin-top:10px}
+.badge{
+  display:inline-block;
+  padding:6px 12px;
+  border-radius:999px;
+  background:#e0e7ff;
+  color:#3730a3;
+  font-weight:700;
+  margin-top:10px
 }
+.actions{display:flex;gap:14px;justify-content:center;margin-top:30px}
+.footer{text-align:center;margin-top:40px;color:#6b7280;font-weight:700}
+.progress{margin-top:8px;font-weight:700;color:#2563eb}
 </style>
 </head>
 
@@ -94,6 +87,7 @@ button{
 if(sessionStorage.getItem("adminAuth")!=="true"){
   location.href="admin-login.html";
 }
+sessionStorage.setItem("viewer","admin");
 </script>
 
 <div class="container">
@@ -114,7 +108,14 @@ if(sessionStorage.getItem("adminAuth")!=="true"){
 
 <hr>
 
-<h2>✍️ Savol qo‘shish / tahrirlash</h2>
+<h2>📂 Excel orqali savol yuklash</h2>
+<input type="file" id="excelFile" accept=".xlsx">
+<button class="blue" onclick="loadExcel()">Excel yuklash</button>
+<div id="excelMsg" class="badge"></div>
+
+<hr>
+
+<h2 id="editSection">✍️ Savol qo‘shish / tahrirlash</h2>
 
 <div class="qbox">
 
@@ -122,15 +123,12 @@ if(sessionStorage.getItem("adminAuth")!=="true"){
 
 <input id="imgUrl" placeholder="Rasm URL (ixtiyoriy)">
 <input type="file" id="imgFile" accept="image/*" onchange="previewImage()">
+<div id="uploadStatus" class="progress"></div>
 
 <div class="preview" id="imgPreview">
   <img id="previewImg">
-  <div class="image-actions">
-    <button class="red" type="button" onclick="removeImage()">🗑 Rasmni o‘chirish</button>
-  </div>
+  <button class="red" onclick="removeImage()">🗑 Rasmni o‘chirish</button>
 </div>
-
-<div id="uploadStatus">⏳ Rasm yuklanmoqda...</div>
 
 <textarea id="a" rows="2" placeholder="A variant"></textarea>
 <textarea id="b" rows="2" placeholder="B variant"></textarea>
@@ -145,8 +143,8 @@ if(sessionStorage.getItem("adminAuth")!=="true"){
   <option>D</option>
 </select>
 
-<button class="blue" onclick="saveQuestion()">Saqlash</button>
-<div id="count">Savollar: 0 / 50</div>
+<button class="blue" onclick="saveQuestion()">💾 Saqlash</button>
+<div id="count" class="badge">Savollar: 0 / 50</div>
 
 </div>
 
@@ -157,7 +155,13 @@ if(sessionStorage.getItem("adminAuth")!=="true"){
 
 <div class="actions">
   <button class="green" onclick="saveTest()">💾 TESTNI SAQLASH</button>
+  <button class="blue" onclick="location.href='results.html'">📊 Natijalar</button>
 </div>
+
+<hr>
+
+<h2>📚 Saqlangan testlar</h2>
+<div id="savedTests"></div>
 
 <div class="footer">@Ped_Life_Uz</div>
 </div>
@@ -165,7 +169,7 @@ if(sessionStorage.getItem("adminAuth")!=="true"){
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <script>
 firebase.initializeApp({
@@ -177,54 +181,57 @@ firebase.initializeApp({
   appId:"1:316652697568:web:7b6b24a3aefc44dcd1dd85"
 });
 
-const db = firebase.firestore();
-const storage = firebase.storage();
+const db=firebase.firestore();
+const storage=firebase.storage();
 
-let questions=[], editIndex=null;
+let questions=[],editIndex=null,currentImage="";
 
 function previewImage(){
   const f=imgFile.files[0];
   if(!f) return;
+  uploadStatus.innerText="⏳ Rasm yuklanmoqda...";
   const r=new FileReader();
   r.onload=e=>{
     previewImg.src=e.target.result;
     imgPreview.style.display="block";
+    uploadStatus.innerText="✅ Rasm tayyor";
   };
   r.readAsDataURL(f);
 }
 
 function removeImage(){
+  currentImage="";
   imgPreview.style.display="none";
   imgFile.value="";
   imgUrl.value="";
-  if(editIndex!==null) questions[editIndex].image="";
 }
 
 async function saveQuestion(){
-  if(!qText.value || !correct.value) return alert("Savol to‘liq emas");
-  if(editIndex===null && questions.length>=50) return alert("50 ta savol bo‘ldi");
+  if(!qText.value||!correct.value) return alert("Savol to‘liq emas");
+  if(editIndex===null && questions.length>=50) return alert("50 ta savol limit");
 
-  let image = editIndex!==null ? questions[editIndex].image : "";
+  let image=currentImage;
 
   if(imgFile.files[0]){
-    uploadStatus.style.display="block";
-    const ref = storage.ref("questions/"+Date.now()+"_"+imgFile.files[0].name);
+    uploadStatus.innerText="⏳ Serverga yuklanmoqda...";
+    const ref=storage.ref("questions/"+Date.now()+"_"+imgFile.files[0].name);
     await ref.put(imgFile.files[0]);
-    image = await ref.getDownloadURL();
-    uploadStatus.style.display="none";
-  } else if(imgUrl.value){
-    image = imgUrl.value.trim();
+    image=await ref.getDownloadURL();
+    uploadStatus.innerText="✅ Yuklandi";
+  }else if(imgUrl.value){
+    image=imgUrl.value.trim();
   }
 
   const q={
-    text:qText.value.trim(),
+    text:qText.value,
     image,
     options:{A:a.value,B:b.value,C:c.value,D:d.value},
     correct:correct.value
   };
 
-  editIndex===null ? questions.push(q) : questions[editIndex]=q;
+  editIndex===null?questions.push(q):questions[editIndex]=q;
   editIndex=null;
+  currentImage="";
 
   qText.value=imgUrl.value=a.value=b.value=c.value=d.value="";
   imgFile.value="";
@@ -241,10 +248,9 @@ function render(){
       <div class="qitem">
         <b>${i+1}. ${q.text}</b><br>
         ${q.image?`<img src="${q.image}" style="max-width:200px;margin-top:8px">`:""}
-        <div><b>To‘g‘ri:</b> ${q.correct}</div>
-        <button class="edit-btn" onclick="editQ(${i})">✏️ Tahrirlash</button>
-      </div>
-    `;
+        <div class="badge">To‘g‘ri: ${q.correct}</div>
+        <button class="blue" onclick="editQ(${i})">✏️ Tahrirlash</button>
+      </div>`;
   });
   count.innerText=`Savollar: ${questions.length} / 50`;
 }
@@ -253,36 +259,56 @@ function editQ(i){
   const q=questions[i];
   editIndex=i;
   qText.value=q.text;
-  imgUrl.value=q.image||"";
   a.value=q.options.A;
   b.value=q.options.B;
   c.value=q.options.C;
   d.value=q.options.D;
   correct.value=q.correct;
+  currentImage=q.image||"";
 
   if(q.image){
     previewImg.src=q.image;
     imgPreview.style.display="block";
   }
 
-  document.querySelector(".qbox").scrollIntoView({behavior:"smooth"});
+  document.getElementById("editSection").scrollIntoView({behavior:"smooth"});
 }
 
 async function saveTest(){
-  if(questions.length!==50) return alert("Test aniq 50 ta savoldan iborat bo‘lishi shart!");
   if(!testId.value) return alert("Test ID yo‘q");
-
   await db.collection("tests").doc(testId.value).set({
-    date:date.value,
-    start:start.value,
-    end:end.value,
-    duration:duration.value,
-    questions
+    date:date.value,start:start.value,end:end.value,
+    duration:duration.value,questions
   });
-
   alert("✅ Test saqlandi");
+  loadSavedTests();
 }
-  function loadExcel(){
+
+async function loadSavedTests(){
+  savedTests.innerHTML="";
+  const snap=await db.collection("tests").get();
+  snap.forEach(d=>{
+    savedTests.innerHTML+=`
+      <div class="qitem">
+        <b>${d.id}</b>
+        <button class="blue" onclick="loadTest('${d.id}')">✏️</button>
+      </div>`;
+  });
+}
+
+async function loadTest(id){
+  const d=await db.collection("tests").doc(id).get();
+  const t=d.data();
+  testId.value=id;
+  date.value=t.date||"";
+  start.value=t.start||"";
+  end.value=t.end||"";
+  duration.value=t.duration||"";
+  questions=t.questions||[];
+  render();
+}
+
+function loadExcel(){
   const f=excelFile.files[0];
   if(!f) return;
   const r=new FileReader();
