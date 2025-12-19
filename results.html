@@ -21,74 +21,31 @@ body{
   border-radius:28px;
   box-shadow:0 40px 100px rgba(0,0,0,.15);
 }
-h1{
-  text-align:center;
-  font-size:32px;
-  font-weight:900;
-  margin-top:0;
-}
+h1{text-align:center;font-size:32px;font-weight:900}
 
-/* BANNER */
-.banner{
-  background:#fff7ed;
-  border:2px solid #f59e0b;
-  padding:20px;
-  border-radius:20px;
-  font-weight:800;
-  text-align:center;
+.test-list{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  justify-content:center;
   margin-bottom:24px;
 }
-
-/* SUMMARY */
-.summary{
-  text-align:center;
-  padding:28px;
-  border-radius:24px;
-  margin-bottom:30px;
-}
-.summary.blue{background:#dbeafe}
-.summary.yellow{background:#fef9c3}
-.summary.orange{background:#ffedd5}
-.summary.red{background:#fee2e2}
-.big{
-  font-size:44px;
-  font-weight:900;
-}
-.badges{
-  display:flex;
-  justify-content:center;
-  gap:14px;
-  margin-top:14px;
-}
-.badge{
-  padding:8px 18px;
+.test-btn{
+  padding:10px 18px;
   border-radius:999px;
-  font-weight:900;
-}
-.ok{background:#dcfce7;color:#166534}
-.no{background:#fee2e2;color:#991b1b}
-
-/* ADMIN TABLE */
-.actions{
-  display:flex;
-  justify-content:center;
-  gap:14px;
-  margin-bottom:20px;
-}
-.actions button{
-  padding:12px 22px;
   border:none;
-  border-radius:14px;
-  font-weight:900;
   cursor:pointer;
-  background:linear-gradient(135deg,#6366f1,#4f46e5);
+  font-weight:800;
+  background:#e0e7ff;
+}
+.test-btn.active{
+  background:#6366f1;
   color:#fff;
 }
 
 .table{
   width:100%;
   border-collapse:collapse;
-  margin-top:20px;
 }
 th,td{
   padding:14px;
@@ -102,111 +59,38 @@ th{background:#f1f5f9}
   border-radius:999px;
   font-weight:900;
 }
-.score.blue{background:#dbeafe;color:#1d4ed8}
-.score.yellow{background:#fef9c3;color:#854d0e}
-.score.orange{background:#ffedd5;color:#9a3412}
-.score.red{background:#fee2e2;color:#991b1b}
+.blue{background:#dbeafe;color:#1d4ed8}
+.yellow{background:#fef9c3;color:#854d0e}
+.orange{background:#ffedd5;color:#9a3412}
+.red{background:#fee2e2;color:#991b1b}
 
-/* ANALYSIS */
-.detail{
-  border:1px solid #e5e7eb;
-  border-radius:22px;
-  padding:22px;
-  margin-top:18px;
-}
-.option{
-  margin-top:6px;
-  font-weight:700;
-}
-.correct{color:#16a34a}
-.wrong{color:#dc2626}
-
-/* MODAL */
-.modal{
-  position:fixed;
-  inset:0;
-  background:rgba(15,23,42,.6);
-  display:none;
-  justify-content:center;
-  align-items:center;
-  z-index:999;
-}
-.modal-box{
-  background:#fff;
-  width:100%;
-  max-width:820px;
-  max-height:90vh;
-  overflow:auto;
-  padding:30px;
-  border-radius:30px;
-}
-.close{
-  float:right;
-  cursor:pointer;
-  font-weight:900;
-}
-
-.footer{
-  text-align:center;
-  margin-top:40px;
-  font-weight:900;
-  color:#4f46e5;
-}
+.footer{text-align:center;margin-top:30px;font-weight:900;color:#4f46e5}
 </style>
 </head>
 
 <body>
 
 <div class="container">
-  <h1>📊 Test Natijalari</h1>
+  <h1>📊 Test Natijalari (Admin)</h1>
 
-  <div id="banner" style="display:none" class="banner"></div>
-  <div id="summary"></div>
+  <div id="tests" class="test-list"></div>
 
-  <!-- ADMIN -->
-  <div id="adminBlock">
-    <div id="testList" style="margin-bottom:30px"></div>
-    <div class="actions">
-      <button onclick="exportExcel()">📥 Excel</button>
-      <button onclick="exportPDF()">📄 PDF</button>
-    </div>
-
-    <table class="table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Ism</th>
-          <th>Familiya</th>
-          <th>Test</th>
-          <th>Ball</th>
-          <th>Vaqt</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody id="rows"></tbody>
-    </table>
-  </div>
-
-  <!-- STUDENT -->
-  <div id="studentBlock" style="display:none">
-    <h2>📝 Sizning test tahlilingiz</h2>
-    <div id="details"></div>
-  </div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Ism</th>
+        <th>Familiya</th>
+        <th>Ball</th>
+        <th>Vaqt</th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
 
   <div class="footer">@Ped_Life_Uz</div>
 </div>
 
-<!-- MODAL -->
-<div class="modal" id="detailModal">
-  <div class="modal-box">
-    <span class="close" onclick="detailModal.style.display='none'">✖</span>
-    <h2>🧠 Test tahlili</h2>
-    <div id="modalDetails"></div>
-  </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
@@ -218,64 +102,44 @@ firebase.initializeApp({
 });
 const db=firebase.firestore();
 
-const viewer=sessionStorage.getItem("viewer")||"student";
-const user=JSON.parse(sessionStorage.getItem("currentUser")||"{}");
+sessionStorage.setItem("viewer","admin"); // 🔒 MAJBURIY ADMIN
 
-const banner=document.getElementById("banner");
-const summary=document.getElementById("summary");
 const rows=document.getElementById("rows");
-const details=document.getElementById("details");
+const testsDiv=document.getElementById("tests");
 
-if(viewer!=="admin"){
-  adminBlock.style.display="none";
-  studentBlock.style.display="block";
-}
+let allResults=[];
+let currentTest=null;
 
-/* LOAD RESULTS */
-  let currentResults={};
 db.collection("results")
- db.collection("results")
-   .get().then(snap=>{)
+  .orderBy("ball","desc")
   .get()
   .then(snap=>{
-    const byTest={};
-currentResults=byTest;
-renderTestList(byTest);
-snap.forEach(d=>{
-  const r=d.data();
-  if(!byTest[r.testId]) byTest[r.testId]=[];
-  byTest[r.testId].push(r);
-});
-
-
-    if(viewer==="student"){
-      const r=all.find(x=>x.ism===user.ism&&x.familiya===user.familiya);
-      if(!r) return;
-      banner.style.display="block";
-      banner.innerText="Siz bu testni topshirgansiz. Test qayta ochilgandan keyin yana topshira olasiz.";
-      renderSummary(r);
-      renderStudent(r);
-    }else{
-      renderAdmin(all);
-    }
+    snap.forEach(d=>allResults.push(d.data()));
+    renderTests();
   });
-function renderTestList(byTest){
-  testList.innerHTML="<h2>📚 Testlar</h2>";
 
-  Object.keys(byTest).forEach(id=>{
-    testList.innerHTML+=`
-      <button class="blue" style="margin:6px"
-        onclick="openTestResults('${id}')">
-        📄 ${id}
-      </button>
-    `;
+function renderTests(){
+  const testIds=[...new Set(allResults.map(r=>r.testId))];
+  testsDiv.innerHTML="";
+  testIds.forEach(id=>{
+    const btn=document.createElement("button");
+    btn.className="test-btn";
+    btn.innerText=id;
+    btn.onclick=()=>selectTest(id,btn);
+    testsDiv.appendChild(btn);
   });
 }
-function openTestResults(testId){
-  rows.innerHTML="";
 
-  const list=currentResults[testId]
-    .sort((a,b)=>b.ball-a.ball);
+function selectTest(id,btn){
+  currentTest=id;
+  document.querySelectorAll(".test-btn").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  renderTable();
+}
+
+function renderTable(){
+  rows.innerHTML="";
+  const list=allResults.filter(r=>r.testId===currentTest);
 
   list.forEach((r,i)=>{
     let cls="red";
@@ -288,114 +152,13 @@ function openTestResults(testId){
         <td>${i+1}</td>
         <td>${r.ism}</td>
         <td>${r.familiya}</td>
-        <td>${r.testId}</td>
         <td><span class="score ${cls}">${r.ball} ball</span></td>
         <td>${r.time}</td>
-        <td>
-          <button onclick='openDetail(${JSON.stringify(r)})'>
-            Ko‘rish
-          </button>
-        </td>
       </tr>
     `;
   });
-}
-
-function renderSummary(r){
-  let cls="red",txt="Testdan o‘tmadingiz";
-  if(r.ball>=80){cls="blue";txt="Oliy toifa";}
-  else if(r.ball>=70){cls="yellow";txt="Birinchi toifa";}
-  else if(r.ball>=60){cls="orange";txt="Ikkinchi toifa";}
-
-  summary.innerHTML=`
-    <div class="summary ${cls}">
-      <div class="big">${r.ball} ball</div>
-      <div>${txt}</div>
-      <div class="badges">
-        <div class="badge ok">To‘g‘ri: ${r.answers.filter(a=>a.selected===a.correct).length}</div>
-        <div class="badge no">Noto‘g‘ri: ${r.answers.length-r.answers.filter(a=>a.selected===a.correct).length}</div>
-      </div>
-    </div>`;
-}
-
-function renderStudent(r){
-  r.answers.forEach((a,i)=>{
-    let html=`
-      <div class="detail">
-        <b>${i+1}. ${a.question}</b><br>
-        ${a.image?`<img src="${a.image}" style="max-width:200px;margin:10px 0">`:""}
-    `;
-    for(const k in a.options){
-      let cls="option";
-      if(k===a.correct) cls+=" correct";
-      if(k===a.selected&&k!==a.correct) cls+=" wrong";
-      html+=`<div class="${cls}">${k}) ${a.options[k]}</div>`;
-    }
-    html+=`
-      <div style="margin-top:8px">
-        ✔ To‘g‘ri: ${a.correct} |
-        ✖ Siz: ${a.selected||"-"}
-      </div>
-      </div>`;
-    details.innerHTML+=html;
-  });
-}
-
-function renderAdmin(list){
-  list.forEach((r,i)=>{
-    let cls="red";
-    if(r.ball>=80) cls="blue";
-    else if(r.ball>=70) cls="yellow";
-    else if(r.ball>=60) cls="orange";
-
-    rows.innerHTML+=`
-      <tr>
-        <td>${i+1}</td>
-        <td>${r.ism}</td>
-        <td>${r.familiya}</td>
-        <td>${r.testId}</td>
-        <td><span class="score ${cls}">${r.ball} ball</span></td>
-        <td>${r.time}</td>
-        <td><button onclick='openDetail(${JSON.stringify(r)})'>Ko‘rish</button></td>
-      </tr>`;
-  });
-}
-
-function openDetail(r){
-  modalDetails.innerHTML="";
-  r.answers.forEach((a,i)=>{
-    let html=`
-      <div class="detail">
-        <b>${i+1}. ${a.question}</b><br>
-        ${a.image?`<img src="${a.image}" style="max-width:200px;margin:10px 0">`:""}
-    `;
-    for(const k in a.options){
-      let cls="option";
-      if(k===a.correct) cls+=" correct";
-      if(k===a.selected&&k!==a.correct) cls+=" wrong";
-      html+=`<div class="${cls}">${k}) ${a.options[k]}</div>`;
-    }
-    html+=`</div>`;
-    modalDetails.innerHTML+=html;
-  });
-  detailModal.style.display="flex";
-}
-
-/* EXPORT */
-function exportExcel(){
-  const ws=XLSX.utils.json_to_sheet([]);
-  const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,"Natijalar");
-  XLSX.writeFile(wb,"natijalar.xlsx");
-}
-function exportPDF(){
-  const {jsPDF}=window.jspdf;
-  const pdf=new jsPDF();
-  pdf.text("Test Natijalari",14,15);
-  pdf.save("natijalar.pdf");
 }
 </script>
 
 </body>
 </html>
-
