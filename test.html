@@ -139,6 +139,17 @@ button{
 .ok{background:#dcfce7;color:#166534}
 .no{background:#fee2e2;color:#991b1b}
 .note{margin-top:8px;font-weight:700}
+.modal-box.success{border-top:10px solid #2563eb}
+.modal-box.gold{border-top:10px solid #facc15}
+.modal-box.orange{border-top:10px solid #fb923c}
+.modal-box.fail{border-top:10px solid #dc2626}
+
+.result-time{
+  margin-top:10px;
+  font-weight:800;
+  color:#475569
+}
+
 </style>
 </head>
 
@@ -149,14 +160,15 @@ button{
 <div class="container" id="main"></div>
 
 <div class="modal" id="resultModal">
-  <div class="modal-box">
+  <div class="modal-box" id="resultBox">
     <h2 id="resultTitle"></h2>
     <div class="score" id="resultScore"></div>
     <div class="badges">
       <div class="badge ok" id="okCount"></div>
       <div class="badge no" id="noCount"></div>
     </div>
-    <button onclick="showAnalysis()">Davom etish</button>
+    <div class="result-time" id="resultTime"></div>
+    <button onclick="showAnalysis()">Test Tahlili</button>
   </div>
 </div>
 
@@ -275,10 +287,33 @@ function finish(){
   });
 
   finalResult={answers:full};
-  resultTitle.innerText="Test yakunlandi";
-  resultScore.innerText=(correct*2)+" ball";
-  okCount.innerText="To‘g‘ri: "+correct;
-  noCount.innerText="Noto‘g‘ri: "+(full.length-correct);
+const ball = correct * 2;
+const spent = (Number(test.duration)*60 - timeLeft);
+const min = Math.floor(spent / 60);
+const sec = spent % 60;
+
+let title = "❌ Attestatsiya Mock testidan o‘tmadingiz";
+let cls = "fail";
+
+if(ball >= 80){
+  title = "🔵 Oliy toifa balini to‘pladingiz";
+  cls = "success";
+}else if(ball >= 70){
+  title = "🟡 Birinchi toifa balini to‘pladingiz";
+  cls = "gold";
+}else if(ball >= 60){
+  title = "🟠 Ikkinchi toifa balini to‘pladingiz";
+  cls = "orange";
+}
+
+resultBox.className = "modal-box " + cls;
+resultTitle.innerText = title;
+resultScore.innerText = ball + " ball";
+
+okCount.innerText = "To‘g‘ri: " + correct;
+noCount.innerText = "Noto‘g‘ri: " + (full.length - correct);
+resultTime.innerText = `⏱ Sarflangan vaqt: ${min} daqiqa ${sec} soniya`;
+
 
   db.collection("results").add({
     testId,
@@ -340,4 +375,5 @@ function showAnalysisFromSaved(r){
 
 </body>
 </html>
+
 
