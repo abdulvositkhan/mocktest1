@@ -3,139 +3,201 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Test Natijalari</title>
+<title>Test natijalari — Admin Panel</title>
 
 <style>
-*{box-sizing:border-box;font-family:Arial,sans-serif}
-body{margin:0;min-height:100vh;background:#f0fdf4;display:flex;justify-content:center;padding:30px}
-.container{width:100%;max-width:1100px;background:#fff;padding:30px;border-radius:22px;border:2px solid #e5e7eb;box-shadow:0 25px 50px rgba(0,0,0,0.15)}
+*{box-sizing:border-box;font-family:Inter,Arial,sans-serif}
+body{
+  margin:0;
+  min-height:100vh;
+  background:linear-gradient(135deg,#ecfeff,#f0fdf4);
+  display:flex;
+  justify-content:center;
+  padding:30px;
+}
+.container{
+  width:100%;
+  max-width:1200px;
+  background:#fff;
+  padding:32px;
+  border-radius:26px;
+  box-shadow:0 30px 80px rgba(0,0,0,.15);
+}
 h1,h2{text-align:center;margin-top:0}
 
-.summary{text-align:center;padding:25px;border-radius:18px;margin-bottom:30px}
+.actions{
+  display:flex;
+  justify-content:center;
+  gap:14px;
+  margin-bottom:25px;
+}
+.actions button{
+  padding:12px 20px;
+  font-weight:800;
+  border:none;
+  border-radius:14px;
+  cursor:pointer;
+  background:linear-gradient(135deg,#6366f1,#4f46e5);
+  color:#fff;
+}
+
+/* SUMMARY */
+.summary{
+  text-align:center;
+  padding:26px;
+  border-radius:20px;
+  margin-bottom:30px;
+}
 .red{background:#fee2e2}
 .orange{background:#ffedd5}
 .yellow{background:#fef9c3}
 .blue{background:#dbeafe}
-.big{font-size:38px;font-weight:bold}
-.user{font-size:20px;margin-bottom:10px}
-.time{margin-top:8px;color:#374151}
+.big{font-size:40px;font-weight:900}
+.user{font-size:22px;font-weight:800}
+.time{margin-top:8px;color:#374151;font-weight:600}
 
-.actions{display:flex;justify-content:center;gap:15px;margin-bottom:25px}
-.actions button{padding:12px 18px;font-weight:bold;border:none;border-radius:10px;cursor:pointer;background:#4f46e5;color:white}
-
-table{width:100%;border-collapse:collapse;margin-top:20px}
-th,td{border:1px solid #e5e7eb;padding:12px;text-align:center}
-th{background:#f3f4f6}
+/* TABLE */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:20px;
+}
+th,td{
+  border:1px solid #e5e7eb;
+  padding:14px;
+  text-align:center;
+}
+th{background:#f3f4f6;font-weight:800}
 tr:nth-child(even){background:#f9fafb}
+.low{color:#dc2626;font-weight:800}
+.mid{color:#d97706;font-weight:800}
+.high{color:#16a34a;font-weight:800}
 
-.low{color:#dc2626;font-weight:bold}
-.mid{color:#d97706;font-weight:bold}
-.high{color:#16a34a;font-weight:bold}
-
+/* DETAILS */
 .detail{
   border:1px solid #e5e7eb;
-  border-radius:14px;
-  padding:16px;
-  margin-top:15px
+  border-radius:18px;
+  padding:18px;
+  margin-top:18px;
 }
 .ok{background:#ecfdf5}
 .bad{background:#fee2e2}
 
-.option{padding:6px 0}
-.correct{color:#16a34a;font-weight:bold}
-.wrong{color:#dc2626;font-weight:bold}
+.option{
+  margin-top:6px;
+  padding:6px 0;
+  font-weight:600;
+}
+.correct{color:#16a34a;font-weight:800}
+.wrong{color:#dc2626;font-weight:800}
 
-.footer{text-align:center;margin-top:40px;font-weight:bold;color:#4f46e5}
+/* MODAL */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.45);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:999;
+}
+.modal-box{
+  background:#fff;
+  padding:30px;
+  border-radius:22px;
+  width:100%;
+  max-width:700px;
+  max-height:90vh;
+  overflow:auto;
+}
+.close{
+  float:right;
+  cursor:pointer;
+  font-weight:900;
+  font-size:18px;
+}
+
+.footer{
+  text-align:center;
+  margin-top:40px;
+  font-weight:800;
+  color:#4f46e5;
+}
 </style>
 </head>
 <body>
 
-<div class="container">
-<h1>📊 Test Natijalari</h1>
+<script>
+/* 🔐 ADMIN SECURITY */
+if(sessionStorage.getItem("viewer")!=="admin"){
+  alert("Ruxsat yo‘q");
+  location.href="index.html";
+}
+</script>
 
-<div class="actions" id="adminActions">
+<div class="container">
+<h1>📊 Test natijalari</h1>
+
+<div class="actions">
   <button onclick="exportExcel()">📥 Excel</button>
   <button onclick="exportPDF()">📄 PDF</button>
 </div>
 
 <div id="summary"></div>
 
-<!-- ADMIN -->
-<div id="adminBlock">
-  <h2>📋 Barcha natijalar</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Ism</th>
-        <th>Familiya</th>
-        <th>Ball</th>
-        <th>Vaqt</th>
-      </tr>
-    </thead>
-    <tbody id="rows"></tbody>
-  </table>
-</div>
-
-<!-- STUDENT -->
-<div id="studentBlock" style="display:none">
-  <h2>📝 Sizning javoblaringiz</h2>
-  <div id="details"></div>
-</div>
+<h2>📋 Barcha natijalar</h2>
+<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Ism</th>
+      <th>Familiya</th>
+      <th>Ball</th>
+      <th>Vaqt</th>
+      <th>Ko‘rish</th>
+    </tr>
+  </thead>
+  <tbody id="rows"></tbody>
+</table>
 
 <div class="footer">@Ped_Life_Uz</div>
 </div>
 
+<!-- MODAL -->
+<div class="modal" id="detailModal">
+  <div class="modal-box">
+    <span class="close" onclick="detailModal.style.display='none'">✖</span>
+    <h2>📝 Test tahlili</h2>
+    <div id="detailBody"></div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-const firebaseConfig={
+firebase.initializeApp({
   apiKey:"AIzaSyDMyRSvTXXxkgTPyeZSeVnpHgh1tH4lJjE",
   authDomain:"mock-8b900.firebaseapp.com",
-  projectId:"mock-8b900",
-  storageBucket:"mock-8b900.appspot.com",
-  messagingSenderId:"316652697568",
-  appId:"1:316652697568:web:7b6b24a3aefc44dcd1dd85"
-};
-firebase.initializeApp(firebaseConfig);
+  projectId:"mock-8b900"
+});
 const db=firebase.firestore();
-
-const viewer=sessionStorage.getItem("viewer")||"student";
-const currentUser=JSON.parse(sessionStorage.getItem("currentUser")||"{}");
 
 const summary=document.getElementById("summary");
 const rows=document.getElementById("rows");
-const details=document.getElementById("details");
-
-if(viewer==="student"){
-  adminBlock.style.display="none";
-  adminActions.style.display="none";
-  studentBlock.style.display="block";
-}
+const detailBody=document.getElementById("detailBody");
 
 db.collection("results").orderBy("time","desc").get().then(snap=>{
   if(snap.empty){
     summary.innerHTML="<b>Natija topilmadi</b>";
     return;
   }
-
   const all=[];
   snap.forEach(d=>all.push(d.data()));
-
-  const last=viewer==="student"
-    ? all.find(r=>r.ism===currentUser.ism && r.familiya===currentUser.familiya)
-    : all[0];
-
-  if(!last) return;
-
-  renderSummary(last);
-
-  if(viewer!=="student") renderAdmin(all);
-  if(viewer==="student") renderStudent(last);
+  renderSummary(all[0]);
+  renderTable(all);
 });
 
 function renderSummary(r){
@@ -153,7 +215,8 @@ function renderSummary(r){
     </div>`;
 }
 
-function renderAdmin(list){
+function renderTable(list){
+  rows.innerHTML="";
   list.forEach((r,i)=>{
     const c=r.ball>=80?"high":r.ball>=60?"mid":"low";
     rows.innerHTML+=`
@@ -163,11 +226,13 @@ function renderAdmin(list){
         <td>${r.familiya}</td>
         <td class="${c}">${r.ball}</td>
         <td>${r.time}</td>
+        <td><button onclick='openDetail(${JSON.stringify(r)})'>🔍</button></td>
       </tr>`;
   });
 }
 
-function renderStudent(r){
+function openDetail(r){
+  detailBody.innerHTML="";
   r.answers.forEach((a,i)=>{
     let html=`
       <div class="detail ${a.selected===a.correct?'ok':'bad'}">
@@ -182,12 +247,13 @@ function renderStudent(r){
     }
     html+=`
       <div style="margin-top:8px">
-        Sizning javobingiz: <b>${a.selected||"-"}</b><br>
+        Siz tanlagan: <b>${a.selected||"-"}</b><br>
         To‘g‘ri javob: <b>${a.correct}</b>
       </div>
-    </div>`;
-    details.innerHTML+=html;
+      </div>`;
+    detailBody.innerHTML+=html;
   });
+  detailModal.style.display="flex";
 }
 
 /* EXPORT */
@@ -207,7 +273,7 @@ function exportExcel(){
 function exportPDF(){
   const {jsPDF}=window.jspdf;
   const pdf=new jsPDF();
-  pdf.text("Test Natijalari",14,15);
+  pdf.text("Test natijalari",14,15);
   let y=25;
   db.collection("results").get().then(snap=>{
     snap.forEach((d,i)=>{
