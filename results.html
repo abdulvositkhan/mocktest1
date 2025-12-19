@@ -3,99 +3,112 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Test natijalari — Admin Panel</title>
+<title>Admin Panel — Test Natijalari</title>
 
 <style>
 *{box-sizing:border-box;font-family:Inter,Arial,sans-serif}
 body{
   margin:0;
   min-height:100vh;
-  background:linear-gradient(135deg,#ecfeff,#f0fdf4);
-  display:flex;
-  justify-content:center;
+  background:linear-gradient(135deg,#eef2ff,#ecfdf5);
   padding:30px;
 }
 .container{
-  width:100%;
   max-width:1200px;
+  margin:auto;
   background:#fff;
   padding:32px;
-  border-radius:26px;
-  box-shadow:0 30px 80px rgba(0,0,0,.15);
+  border-radius:28px;
+  box-shadow:0 40px 100px rgba(0,0,0,.15);
 }
-h1,h2{text-align:center;margin-top:0}
+h1{
+  text-align:center;
+  margin-top:0;
+  font-size:32px;
+  font-weight:900;
+  color:#1e293b;
+}
 
+/* ACTIONS */
 .actions{
   display:flex;
   justify-content:center;
   gap:14px;
-  margin-bottom:25px;
+  margin:25px 0;
 }
 .actions button{
-  padding:12px 20px;
-  font-weight:800;
+  padding:12px 22px;
   border:none;
   border-radius:14px;
+  font-weight:900;
   cursor:pointer;
   background:linear-gradient(135deg,#6366f1,#4f46e5);
   color:#fff;
 }
 
-/* SUMMARY */
-.summary{
-  text-align:center;
-  padding:26px;
-  border-radius:20px;
-  margin-bottom:30px;
+/* RESULT LIST */
+.result-list{
+  margin-top:30px;
 }
-.red{background:#fee2e2}
-.orange{background:#ffedd5}
-.yellow{background:#fef9c3}
-.blue{background:#dbeafe}
-.big{font-size:40px;font-weight:900}
-.user{font-size:22px;font-weight:800}
-.time{margin-top:8px;color:#374151;font-weight:600}
-
-/* TABLE */
-table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:20px;
-}
-th,td{
-  border:1px solid #e5e7eb;
-  padding:14px;
-  text-align:center;
-}
-th{background:#f3f4f6;font-weight:800}
-tr:nth-child(even){background:#f9fafb}
-.low{color:#dc2626;font-weight:800}
-.mid{color:#d97706;font-weight:800}
-.high{color:#16a34a;font-weight:800}
-
-/* DETAILS */
-.detail{
-  border:1px solid #e5e7eb;
-  border-radius:18px;
+.result-card{
+  display:grid;
+  grid-template-columns: 60px 1.5fr 1fr 1fr 120px 100px;
+  gap:12px;
+  align-items:center;
   padding:18px;
-  margin-top:18px;
+  margin-bottom:14px;
+  border-radius:20px;
+  background:#f8fafc;
+  border:1px solid #e5e7eb;
+  transition:.2s;
 }
-.ok{background:#ecfdf5}
-.bad{background:#fee2e2}
-
-.option{
-  margin-top:6px;
-  padding:6px 0;
-  font-weight:600;
+.result-card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 30px rgba(0,0,0,.12);
 }
-.correct{color:#16a34a;font-weight:800}
-.wrong{color:#dc2626;font-weight:800}
+.index{
+  font-weight:900;
+  font-size:20px;
+  color:#475569;
+}
+.name{
+  font-weight:900;
+  font-size:17px;
+}
+.testid{
+  font-size:14px;
+  color:#64748b;
+}
+.time{
+  font-size:14px;
+  color:#475569;
+}
+.score{
+  font-weight:900;
+  font-size:18px;
+  padding:6px 14px;
+  border-radius:999px;
+  text-align:center;
+}
+.score.blue{background:#dbeafe;color:#1d4ed8}
+.score.yellow{background:#fef9c3;color:#854d0e}
+.score.orange{background:#ffedd5;color:#9a3412}
+.score.red{background:#fee2e2;color:#991b1b}
+.view-btn{
+  padding:10px 16px;
+  border:none;
+  border-radius:12px;
+  cursor:pointer;
+  font-weight:900;
+  background:#4f46e5;
+  color:#fff;
+}
 
 /* MODAL */
 .modal{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.45);
+  background:rgba(0,0,0,.55);
   display:none;
   justify-content:center;
   align-items:center;
@@ -103,32 +116,51 @@ tr:nth-child(even){background:#f9fafb}
 }
 .modal-box{
   background:#fff;
-  padding:30px;
-  border-radius:22px;
   width:100%;
-  max-width:700px;
+  max-width:820px;
   max-height:90vh;
   overflow:auto;
+  padding:30px;
+  border-radius:26px;
+  box-shadow:0 30px 80px rgba(0,0,0,.35);
 }
 .close{
   float:right;
   cursor:pointer;
-  font-weight:900;
   font-size:18px;
+  font-weight:900;
 }
+.question{
+  border:1px solid #e5e7eb;
+  border-radius:18px;
+  padding:18px;
+  margin-top:18px;
+}
+.question img{
+  max-width:220px;
+  margin:10px 0;
+  border-radius:12px;
+}
+.option{
+  margin-top:6px;
+  font-weight:700;
+}
+.correct{color:#16a34a}
+.wrong{color:#dc2626}
 
 .footer{
   text-align:center;
   margin-top:40px;
-  font-weight:800;
+  font-weight:900;
   color:#4f46e5;
 }
 </style>
 </head>
+
 <body>
 
 <script>
-/* 🔐 ADMIN SECURITY */
+/* ADMIN SECURITY */
 if(sessionStorage.getItem("viewer")!=="admin"){
   alert("Ruxsat yo‘q");
   location.href="index.html";
@@ -136,34 +168,19 @@ if(sessionStorage.getItem("viewer")!=="admin"){
 </script>
 
 <div class="container">
-<h1>📊 Test natijalari</h1>
+  <h1>📊 Test Natijalari — Admin Panel</h1>
 
-<div class="actions">
-  <button onclick="exportExcel()">📥 Excel</button>
-  <button onclick="exportPDF()">📄 PDF</button>
+  <div class="actions">
+    <button onclick="exportExcel()">📥 Excel</button>
+    <button onclick="exportPDF()">📄 PDF</button>
+  </div>
+
+  <div class="result-list" id="resultList"></div>
+
+  <div class="footer">@Ped_Life_Uz</div>
 </div>
 
-<div id="summary"></div>
-
-<h2>📋 Barcha natijalar</h2>
-<table>
-  <thead>
-    <tr>
-      <th>#</th>
-      <th>Ism</th>
-      <th>Familiya</th>
-      <th>Ball</th>
-      <th>Vaqt</th>
-      <th>Ko‘rish</th>
-    </tr>
-  </thead>
-  <tbody id="rows"></tbody>
-</table>
-
-<div class="footer">@Ped_Life_Uz</div>
-</div>
-
-<!-- MODAL -->
+<!-- DETAIL MODAL -->
 <div class="modal" id="detailModal">
   <div class="modal-box">
     <span class="close" onclick="detailModal.style.display='none'">✖</span>
@@ -185,59 +202,43 @@ firebase.initializeApp({
 });
 const db=firebase.firestore();
 
-const summary=document.getElementById("summary");
-const rows=document.getElementById("rows");
+const list=document.getElementById("resultList");
 const detailBody=document.getElementById("detailBody");
 
-db.collection("results").orderBy("time","desc").get().then(snap=>{
-  if(snap.empty){
-    summary.innerHTML="<b>Natija topilmadi</b>";
-    return;
-  }
-  const all=[];
-  snap.forEach(d=>all.push(d.data()));
-  renderSummary(all[0]);
-  renderTable(all);
-});
+/* LOAD RESULTS — BALL BO‘YICHA */
+db.collection("results")
+  .orderBy("ball","desc")
+  .orderBy("time","desc")
+  .get()
+  .then(snap=>{
+    let i=1;
+    snap.forEach(d=>{
+      const r=d.data();
+      let cls="red";
+      if(r.ball>=80) cls="blue";
+      else if(r.ball>=70) cls="yellow";
+      else if(r.ball>=60) cls="orange";
 
-function renderSummary(r){
-  let cls="red",txt="Attestatsiya Mock testidan o‘tmadingiz";
-  if(r.ball>=80){cls="blue";txt="Oliy toifa balini to‘pladingiz";}
-  else if(r.ball>=70){cls="yellow";txt="Birinchi toifa balini to‘pladingiz";}
-  else if(r.ball>=60){cls="orange";txt="Ikkinchi toifa balini to‘pladingiz";}
-
-  summary.innerHTML=`
-    <div class="summary ${cls}">
-      <div class="user">${r.ism} ${r.familiya}</div>
-      <div class="big">${r.ball}/100</div>
-      <div>${txt}</div>
-      <div class="time">Tugagan vaqt: ${r.time}</div>
-    </div>`;
-}
-
-function renderTable(list){
-  rows.innerHTML="";
-  list.forEach((r,i)=>{
-    const c=r.ball>=80?"high":r.ball>=60?"mid":"low";
-    rows.innerHTML+=`
-      <tr>
-        <td>${i+1}</td>
-        <td>${r.ism}</td>
-        <td>${r.familiya}</td>
-        <td class="${c}">${r.ball}</td>
-        <td>${r.time}</td>
-        <td><button onclick='openDetail(${JSON.stringify(r)})'>🔍</button></td>
-      </tr>`;
+      list.innerHTML+=`
+        <div class="result-card">
+          <div class="index">${i++}</div>
+          <div class="name">${r.ism} ${r.familiya}</div>
+          <div class="testid">${r.testId}</div>
+          <div class="time">${r.time}</div>
+          <div class="score ${cls}">${r.ball} ball</div>
+          <button class="view-btn" onclick='openDetail(${JSON.stringify(r)})'>Ko‘rish</button>
+        </div>
+      `;
+    });
   });
-}
 
 function openDetail(r){
   detailBody.innerHTML="";
   r.answers.forEach((a,i)=>{
     let html=`
-      <div class="detail ${a.selected===a.correct?'ok':'bad'}">
+      <div class="question">
         <b>${i+1}. ${a.question}</b><br>
-        ${a.image?`<img src="${a.image}" style="max-width:200px;margin:10px 0">`:""}
+        ${a.image?`<img src="${a.image}">`:""}
     `;
     for(const k in a.options){
       let cls="option";
@@ -247,8 +248,8 @@ function openDetail(r){
     }
     html+=`
       <div style="margin-top:8px">
-        Siz tanlagan: <b>${a.selected||"-"}</b><br>
-        To‘g‘ri javob: <b>${a.correct}</b>
+        Siz tanlagan: <b>${a.selected||"-"}</b> |
+        To‘g‘ri: <b>${a.correct}</b>
       </div>
       </div>`;
     detailBody.innerHTML+=html;
@@ -262,7 +263,11 @@ function exportExcel(){
     const data=[];
     snap.forEach(d=>data.push(d.data()));
     const ws=XLSX.utils.json_to_sheet(data.map(r=>({
-      Ism:r.ism,Familiya:r.familiya,Ball:r.ball,Vaqt:r.time
+      Ism:r.ism,
+      Familiya:r.familiya,
+      Test:r.testId,
+      Ball:r.ball+" ball",
+      Vaqt:r.time
     })));
     const wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,ws,"Natijalar");
@@ -273,12 +278,12 @@ function exportExcel(){
 function exportPDF(){
   const {jsPDF}=window.jspdf;
   const pdf=new jsPDF();
-  pdf.text("Test natijalari",14,15);
+  pdf.text("Test Natijalari",14,15);
   let y=25;
-  db.collection("results").get().then(snap=>{
+  db.collection("results").orderBy("ball","desc").get().then(snap=>{
     snap.forEach((d,i)=>{
       const r=d.data();
-      pdf.text(`${i+1}. ${r.ism} ${r.familiya} — ${r.ball} — ${r.time}`,14,y);
+      pdf.text(`${i+1}. ${r.ism} ${r.familiya} — ${r.ball} ball — ${r.time}`,14,y);
       y+=8;
     });
     pdf.save("natijalar.pdf");
