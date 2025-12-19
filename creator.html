@@ -10,20 +10,22 @@
 body{
   margin:0;
   min-height:100vh;
-  background:linear-gradient(135deg,#ecfeff,#f0fdf4);
+  background:linear-gradient(135deg,#eef2ff,#ecfdf5);
   padding:30px;
   display:flex;
   justify-content:center
 }
 .container{
   width:100%;
-  max-width:1200px;
+  max-width:1250px;
   background:#fff;
-  padding:32px;
-  border-radius:26px;
-  box-shadow:0 30px 80px rgba(0,0,0,.15)
+  padding:36px;
+  border-radius:30px;
+  box-shadow:0 40px 100px rgba(0,0,0,.18)
 }
-h1,h2{text-align:center;margin-top:0}
+h1,h2{text-align:center;margin-top:0;font-weight:900}
+hr{margin:30px 0;border:none;border-top:1px solid #e5e7eb}
+
 input,textarea,select{
   width:100%;
   padding:14px;
@@ -36,48 +38,102 @@ input,textarea,select{
 input:focus,textarea:focus,select:focus{
   outline:none;
   border-color:#6366f1;
-  box-shadow:0 0 0 3px rgba(99,102,241,.2)
+  box-shadow:0 0 0 4px rgba(99,102,241,.18)
 }
 textarea{resize:vertical}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+.row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px
+}
+
 button{
-  padding:13px 22px;
+  padding:14px 26px;
   border:none;
-  border-radius:14px;
-  font-weight:700;
+  border-radius:16px;
+  font-weight:800;
   cursor:pointer;
   transition:.2s
 }
+button:hover{transform:translateY(-1px)}
+
 .blue{background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff}
 .green{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff}
-button:hover{transform:translateY(-1px)}
-.qbox{
-  border:2px dashed #c7d2fe;
-  padding:22px;
-  border-radius:22px;
-  margin-top:22px;
-  background:#f8fafc
-}
-.qitem{
-  border:1px solid #e5e7eb;
-  padding:18px;
-  border-radius:18px;
-  margin-top:14px;
-  background:#fff
-}
-.preview img{max-width:240px;border-radius:14px;margin-top:10px}
+.red{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff}
+
 .badge{
   display:inline-block;
-  padding:6px 12px;
+  padding:6px 14px;
   border-radius:999px;
   background:#e0e7ff;
   color:#3730a3;
-  font-weight:700;
+  font-weight:800;
   margin-top:10px
 }
-.actions{display:flex;gap:14px;justify-content:center;margin-top:30px}
-.footer{text-align:center;margin-top:40px;color:#6b7280;font-weight:700}
-.progress{margin-top:8px;font-weight:700;color:#2563eb}
+
+.qbox{
+  border:2px dashed #c7d2fe;
+  padding:26px;
+  border-radius:26px;
+  margin-top:24px;
+  background:#f8fafc
+}
+
+.qitem{
+  border:1px solid #e5e7eb;
+  padding:20px;
+  border-radius:20px;
+  margin-top:16px;
+  background:#fff
+}
+
+.preview img{
+  max-width:260px;
+  border-radius:16px;
+  margin-top:12px
+}
+
+.progress{
+  margin-top:8px;
+  font-weight:800;
+  color:#2563eb
+}
+
+.actions{
+  display:flex;
+  gap:16px;
+  justify-content:center;
+  margin-top:32px
+}
+
+.footer{
+  text-align:center;
+  margin-top:40px;
+  color:#6b7280;
+  font-weight:800
+}
+
+/* MODAL */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,.6);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:999
+}
+.modal-box{
+  background:#fff;
+  padding:34px;
+  border-radius:28px;
+  max-width:480px;
+  width:100%;
+  text-align:center;
+  box-shadow:0 40px 120px rgba(0,0,0,.4)
+}
+.modal-box h3{margin-top:0}
 </style>
 </head>
 
@@ -125,8 +181,9 @@ sessionStorage.setItem("viewer","admin");
 <input type="file" id="imgFile" accept="image/*" onchange="previewImage()">
 <div id="uploadStatus" class="progress"></div>
 
-<div class="preview" id="imgPreview">
+<div class="preview" id="imgPreview" style="display:none">
   <img id="previewImg">
+  <br>
   <button class="red" onclick="removeImage()">🗑 Rasmni o‘chirish</button>
 </div>
 
@@ -143,7 +200,7 @@ sessionStorage.setItem("viewer","admin");
   <option>D</option>
 </select>
 
-<button class="blue" onclick="saveQuestion()">💾 Saqlash</button>
+<button class="blue" onclick="saveQuestion()">💾 Savolni saqlash</button>
 <div id="count" class="badge">Savollar: 0 / 50</div>
 
 </div>
@@ -166,6 +223,15 @@ sessionStorage.setItem("viewer","admin");
 <div class="footer">@Ped_Life_Uz</div>
 </div>
 
+<!-- MODAL -->
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <h3 id="modalTitle"></h3>
+    <p id="modalText"></p>
+    <button class="blue" onclick="modal.style.display='none'">OK</button>
+  </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
@@ -185,7 +251,15 @@ const db=firebase.firestore();
 const storage=firebase.storage();
 
 let questions=[],editIndex=null,currentImage="";
+const modal=document.getElementById("modal");
 
+function showModal(title,text){
+  modalTitle.innerText=title;
+  modalText.innerText=text;
+  modal.style.display="flex";
+}
+
+/* IMAGE */
 function previewImage(){
   const f=imgFile.files[0];
   if(!f) return;
@@ -198,7 +272,6 @@ function previewImage(){
   };
   r.readAsDataURL(f);
 }
-
 function removeImage(){
   currentImage="";
   imgPreview.style.display="none";
@@ -206,12 +279,18 @@ function removeImage(){
   imgUrl.value="";
 }
 
+/* SAVE QUESTION */
 async function saveQuestion(){
-  if(!qText.value||!correct.value) return alert("Savol to‘liq emas");
-  if(editIndex===null && questions.length>=50) return alert("50 ta savol limit");
+  if(!qText.value||!correct.value){
+    showModal("Xatolik","Savol va to‘g‘ri javob majburiy");
+    return;
+  }
+  if(editIndex===null && questions.length>=50){
+    showModal("Limit","50 ta savol limit");
+    return;
+  }
 
   let image=currentImage;
-
   if(imgFile.files[0]){
     uploadStatus.innerText="⏳ Serverga yuklanmoqda...";
     const ref=storage.ref("questions/"+Date.now()+"_"+imgFile.files[0].name);
@@ -241,6 +320,7 @@ async function saveQuestion(){
   render();
 }
 
+/* RENDER */
 function render(){
   questionList.innerHTML="";
   questions.forEach((q,i)=>{
@@ -248,13 +328,14 @@ function render(){
       <div class="qitem">
         <b>${i+1}. ${q.text}</b><br>
         ${q.image?`<img src="${q.image}" style="max-width:200px;margin-top:8px">`:""}
-        <div class="badge">To‘g‘ri: ${q.correct}</div>
+        <div class="badge">To‘g‘ri javob: ${q.correct}</div><br>
         <button class="blue" onclick="editQ(${i})">✏️ Tahrirlash</button>
       </div>`;
   });
   count.innerText=`Savollar: ${questions.length} / 50`;
 }
 
+/* EDIT */
 function editQ(i){
   const q=questions[i];
   editIndex=i;
@@ -270,20 +351,39 @@ function editQ(i){
     previewImg.src=q.image;
     imgPreview.style.display="block";
   }
-
-  document.getElementById("editSection").scrollIntoView({behavior:"smooth"});
+  document.getElementById("editSection")
+    .scrollIntoView({behavior:"smooth"});
 }
 
+/* SAVE TEST */
 async function saveTest(){
-  if(!testId.value) return alert("Test ID yo‘q");
-  await db.collection("tests").doc(testId.value).set({
-    date:date.value,start:start.value,end:end.value,
-    duration:duration.value,questions
+  if(!testId.value){
+    showModal("Xatolik","Test ID kiritilmagan");
+    return;
+  }
+
+  const ref=db.collection("tests").doc(testId.value);
+  const snap=await ref.get();
+
+  let version=1;
+  if(snap.exists){
+    version=(snap.data().version||1)+1;
+  }
+
+  await ref.set({
+    date:date.value,
+    start:start.value,
+    end:end.value,
+    duration:duration.value,
+    version,
+    questions
   });
-  alert("✅ Test saqlandi");
+
+  showModal("Muvaffaqiyat","Test saqlandi. Version: "+version);
   loadSavedTests();
 }
 
+/* LOAD TESTS */
 async function loadSavedTests(){
   savedTests.innerHTML="";
   const snap=await db.collection("tests").get();
@@ -291,6 +391,7 @@ async function loadSavedTests(){
     savedTests.innerHTML+=`
       <div class="qitem">
         <b>${d.id}</b>
+        <span class="badge">v${d.data().version||1}</span>
         <button class="blue" onclick="loadTest('${d.id}')">✏️</button>
       </div>`;
   });
@@ -308,6 +409,7 @@ async function loadTest(id){
   render();
 }
 
+/* EXCEL */
 function loadExcel(){
   const f=excelFile.files[0];
   if(!f) return;
