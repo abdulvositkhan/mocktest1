@@ -398,7 +398,21 @@ savedTests.innerHTML+=`
 
   });
 }
+async function deleteTest(id){
+  const ok = confirm(
+    `⚠️ "${id}" testini o‘chirmoqchimisiz?\n\n` +
+    "Bu amalni ORQAGA QAYTARIB BO‘LMAYDI!"
+  );
+  if(!ok) return;
 
+  try{
+    await db.collection("tests").doc(id).delete();
+    showModal("Muvaffaqiyat", `"${id}" testi o‘chirildi`);
+    loadSavedTests();
+  }catch(e){
+    showModal("Xatolik", "Testni o‘chirishda xatolik yuz berdi");
+  }
+}
 async function loadTest(id){
   const d=await db.collection("tests").doc(id).get();
   const t=d.data();
@@ -436,25 +450,9 @@ function loadExcel(){
   r.readAsArrayBuffer(f);
 }
 
-loadSavedTests();
-  async function deleteTest(id){
-  const ok = confirm(
-    `⚠️ "${id}" testini o‘chirmoqchimisiz?\n\n` +
-    "Bu amalni ORQAGA QAYTARIB BO‘LMAYDI!"
-  );
-  if(!ok) return;
-
-  try{
-    await db.collection("tests").doc(id).delete();
-    showModal("Muvaffaqiyat", `"${id}" testi o‘chirildi`);
-    loadSavedTests();
-  }catch(e){
-    showModal("Xatolik", "Testni o‘chirishda xatolik yuz berdi");
-  }
-}
-
 </script>
 
 </body>
 </html>
+
 
