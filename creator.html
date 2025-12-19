@@ -385,34 +385,19 @@ async function saveTest(){
 
 /* LOAD TESTS */
 async function loadSavedTests(){
-savedTests.innerHTML+=`
-  <div class="qitem">
-    <b>${d.id}</b>
-    <span class="badge">v${d.data().version||1}</span>
-
-    <div style="margin-top:10px;display:flex;gap:10px">
-      <button class="blue" onclick="loadTest('${d.id}')">✏️ Tahrirlash</button>
-      <button class="red" onclick="deleteTest('${d.id}')">🗑 O‘chirish</button>
-    </div>
-  </div>`;
-
+  savedTests.innerHTML="";
+  const snap=await db.collection("tests").get();
+  snap.forEach(d=>{
+    savedTests.innerHTML+=`
+      <div class="qitem">
+        <b>${d.id}</b>
+        <span class="badge">v${d.data().version||1}</span>
+        <button class="blue" onclick="loadTest('${d.id}')">✏️</button>
+        <button class="red" onclick="deleteTest('${d.id}')">🗑 O‘chirish</button>
+      </div>`;
   });
 }
-async function deleteTest(id){
-  const ok = confirm(
-    `⚠️ "${id}" testini o‘chirmoqchimisiz?\n\n` +
-    "Bu amalni ORQAGA QAYTARIB BO‘LMAYDI!"
-  );
-  if(!ok) return;
 
-  try{
-    await db.collection("tests").doc(id).delete();
-    showModal("Muvaffaqiyat", `"${id}" testi o‘chirildi`);
-    loadSavedTests();
-  }catch(e){
-    showModal("Xatolik", "Testni o‘chirishda xatolik yuz berdi");
-  }
-}
 async function loadTest(id){
   const d=await db.collection("tests").doc(id).get();
   const t=d.data();
@@ -425,6 +410,23 @@ async function loadTest(id){
   render();
 }
 
+  sync function deleteTest(id){
+  const ok = confirm(
+    `⚠️ "${id}" testini o‘chirmoqchimisiz?\n\n` +
+    "Bu amalni ORQAGA QAYTARIB BO‘LMAYDI!"
+  );
+
+  if(!ok) return;
+
+  try{
+    await db.collection("tests").doc(id).delete();
+    showModal("Muvaffaqiyat", `"${id}" testi o‘chirildi`);
+    loadSavedTests();
+  }catch(err){
+    showModal("Xatolik", "Testni o‘chirishda xatolik yuz berdi");
+  }
+}
+  
 /* EXCEL */
 function loadExcel(){
   const f=excelFile.files[0];
@@ -450,9 +452,8 @@ function loadExcel(){
   r.readAsArrayBuffer(f);
 }
 
+loadSavedTests();
 </script>
 
 </body>
 </html>
-
-
