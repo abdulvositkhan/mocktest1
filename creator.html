@@ -393,19 +393,57 @@ async function loadSavedTests(){
         <b>${d.id}</b>
         <span class="badge">v${d.data().version||1}</span>
         <button class="blue" onclick="loadTest('${d.id}')">✏️</button>
+     <button class="red" onclick="deleteTest('${d.id}')">🗑 O‘chirish</button>
       </div>`;
   });
 }
+  
+async function deleteTest(testId){
+  const ok = confirm(
+    "Diqqat!\n\n" +
+    "Bu testni o‘chirsangiz:\n" +
+    "• Test butunlay o‘chadi\n" +
+    "• Natijalar ham o‘chadi\n\n" +
+    "Davom etasizmi?"
+  );
+
+  if(!ok) return;
+
+  try{
+    // 🔴 Testni o‘chirish
+    await db.collection("tests").doc(testId).delete();
+
+    // 🔴 Shu testga tegishli natijalarni ham o‘chirish
+    const res = await db.collection("results")
+      .where("testId","==",testId)
+      .get();
+
+    const batch = db.batch();
+    res.forEach(doc=>batch.delete(doc.ref));
+    await batch.commit();
+
+    showModal("Muvaffaqiyat", "Test va barcha natijalari o‘chirildi");
+    loadSavedTests(); // 🔄 yangilash
+  }catch(e){
+    showModal("Xatolik", "Testni o‘chirishda muammo bo‘ldi");
+  }
+}
 
 async function loadTest(id){
-  const d=await db.collection("tests").doc(id).get();
-  const t=d.data();
-  testId.value=id;
-  date.value=t.date||"";
-  start.value=t.start||"";
-  end.value=t.end||"";
-  duration.value=t.duration||"";
-  questions=t.questions||[];
+  questions = [];
+  editIndex = null;
+  currentImage = "";
+
+  const d = await db.collection("tests").doc(id).get();
+  const t = d.data();
+
+  testId.value = id;
+  date.value = t.date || "";
+  start.value = t.start || "";
+  end.value = t.end || "";
+  duration.value = t.duration || "";
+  questions = t.questions || [];
+
   render();
 }
 
@@ -439,3 +477,4 @@ loadSavedTests();
 
 </body>
 </html>
+
