@@ -126,7 +126,9 @@ sessionStorage.setItem("viewer","admin");
   <option>D</option>
 </select>
 
-<button class="blue" onclick="saveQuestion()">Saqlash</button>
+<button type="button" class="blue" onclick="saveQuestion()">
+  Saqlash
+</button>
 <div id="count">Savollar: 0 / 50</div>
 
 </div>
@@ -182,38 +184,70 @@ function previewImage(){
 
 /* ✅ FAqat shu funksiya tuzatildi */
 async function saveQuestion(){
-  if(!qText.value || !correct.value) return alert("Savol to‘liq emas");
-  if(editIndex===null && questions.length>=50) return alert("50 ta savol bo‘ldi");
+  try {
+    if(!qText.value || !correct.value){
+      alert("Savol to‘liq emas");
+      return;
+    }
 
-  let image = editIndex !== null ? questions[editIndex].image : "";
+    if(editIndex === null && questions.length >= 50){
+      alert("50 ta savol bo‘ldi");
+      return;
+    }
 
-  if(imgFile.files[0]){
-    const ref = storage.ref(
-      "questions/" + Date.now() + "_" + imgFile.files[0].name
-    );
-    await ref.put(imgFile.files[0]);
-    image = await ref.getDownloadURL();
-  } else if(imgUrl.value){
-    image = imgUrl.value.trim();
+    let image = editIndex !== null ? questions[editIndex].image : "";
+
+    // 👉 AGAR FILE TANLANGAN BO‘LSA
+    if(imgFile.files.length > 0){
+      const file = imgFile.files[0];
+
+      const ref = storage
+        .ref()
+        .child("questions/" + Date.now() + "_" + file.name);
+
+      const snapshot = await ref.put(file);
+      image = await snapshot.ref.getDownloadURL();
+    }
+    // 👉 AGAR URL YOZILGAN BO‘LSA
+    else if(imgUrl.value.trim() !== ""){
+      image = imgUrl.value.trim();
+    }
+
+    const q = {
+      text: qText.value.trim(),
+      image,
+      options:{
+        A: a.value.trim(),
+        B: b.value.trim(),
+        C: c.value.trim(),
+        D: d.value.trim()
+      },
+      correct: correct.value
+    };
+
+    if(editIndex === null){
+      questions.push(q);
+    } else {
+      questions[editIndex] = q;
+      editIndex = null;
+    }
+
+    // 🔄 TOZALASH
+    qText.value = "";
+    imgUrl.value = "";
+    a.value = b.value = c.value = d.value = "";
+    imgFile.value = "";
+    correct.value = "";
+    imgPreview.style.display = "none";
+
+    render();
+
+  } catch(err){
+    console.error("❌ Saqlashda xato:", err);
+    alert("❌ Rasm yuklashda xato bo‘ldi. Console ni tekshir.");
   }
-
-  const q = {
-    text: qText.value,
-    image,
-    options:{A:a.value,B:b.value,C:c.value,D:d.value},
-    correct: correct.value
-  };
-
-  editIndex===null ? questions.push(q) : questions[editIndex]=q;
-  editIndex=null;
-
-  qText.value = imgUrl.value = a.value = b.value = c.value = d.value = "";
-  imgFile.value = "";
-  correct.value = "";
-  imgPreview.style.display="none";
-
-  render();
 }
+
 
 function render(){
   questionList.innerHTML="";
@@ -333,4 +367,5 @@ loadSavedTests();
 
 </body>
 </html>
+
 
