@@ -165,6 +165,7 @@ th{background:#f1f5f9}
 
   <!-- ADMIN -->
   <div id="adminBlock">
+    <div id="testList" style="margin-bottom:30px"></div>
     <div class="actions">
       <button onclick="exportExcel()">📥 Excel</button>
       <button onclick="exportPDF()">📄 PDF</button>
@@ -231,13 +232,21 @@ if(viewer!=="admin"){
 }
 
 /* LOAD RESULTS */
+  let currentResults={};
 db.collection("results")
-  .orderBy("ball","desc")
-  .orderBy("time","desc")
+ db.collection("results")
+   .get().then(snap=>{)
   .get()
   .then(snap=>{
-    const all=[];
-    snap.forEach(d=>all.push(d.data()));
+    const byTest={};
+currentResults=byTest;
+renderTestList(byTest);
+snap.forEach(d=>{
+  const r=d.data();
+  if(!byTest[r.testId]) byTest[r.testId]=[];
+  byTest[r.testId].push(r);
+});
+
 
     if(viewer==="student"){
       const r=all.find(x=>x.ism===user.ism&&x.familiya===user.familiya);
@@ -250,6 +259,47 @@ db.collection("results")
       renderAdmin(all);
     }
   });
+function renderTestList(byTest){
+  testList.innerHTML="<h2>📚 Testlar</h2>";
+
+  Object.keys(byTest).forEach(id=>{
+    testList.innerHTML+=`
+      <button class="blue" style="margin:6px"
+        onclick="openTestResults('${id}')">
+        📄 ${id}
+      </button>
+    `;
+  });
+}
+function openTestResults(testId){
+  rows.innerHTML="";
+
+  const list=currentResults[testId]
+    .sort((a,b)=>b.ball-a.ball);
+
+  list.forEach((r,i)=>{
+    let cls="red";
+    if(r.ball>=80) cls="blue";
+    else if(r.ball>=70) cls="yellow";
+    else if(r.ball>=60) cls="orange";
+
+    rows.innerHTML+=`
+      <tr>
+        <td>${i+1}</td>
+        <td>${r.ism}</td>
+        <td>${r.familiya}</td>
+        <td>${r.testId}</td>
+        <td><span class="score ${cls}">${r.ball} ball</span></td>
+        <td>${r.time}</td>
+        <td>
+          <button onclick='openDetail(${JSON.stringify(r)})'>
+            Ko‘rish
+          </button>
+        </td>
+      </tr>
+    `;
+  });
+}
 
 function renderSummary(r){
   let cls="red",txt="Testdan o‘tmadingiz";
@@ -348,3 +398,4 @@ function exportPDF(){
 
 </body>
 </html>
+
