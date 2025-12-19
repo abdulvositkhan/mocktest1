@@ -170,102 +170,49 @@ const storage = firebase.storage();
 let questions = [], editIndex = null;
 
 function previewImage(){
-function previewImage(){
   const f = imgFile.files[0];
   if(!f) return;
-
   const r = new FileReader();
   r.onload = e=>{
     previewImg.src = e.target.result;
-    imgPreview.style.display = "block";
-    removeImgBtn.style.display = "inline-block"; // ✅ tugma chiqadi
+    imgPreview.style.display="block";
   };
   r.readAsDataURL(f);
 }
 
 /* ✅ FAqat shu funksiya tuzatildi */
 async function saveQuestion(){
- async function saveQuestion(){
-  try {
-    if(!qText.value || !correct.value){
-      alert("Savol to‘liq emas");
-      return;
-    }
+  if(!qText.value || !correct.value) return alert("Savol to‘liq emas");
+  if(editIndex===null && questions.length>=50) return alert("50 ta savol bo‘ldi");
 
-    if(editIndex === null && questions.length >= 50){
-      alert("50 ta savol bo‘ldi");
-      return;
-    }
+  let image = editIndex !== null ? questions[editIndex].image : "";
 
-    let oldImage = "";
-    let image = "";
-
-    // tahrirlash bo‘lsa eski rasmni eslab qolamiz
-    if(editIndex !== null){
-      oldImage = questions[editIndex].image || "";
-      image = oldImage;
-    }
-
-    // 🔥 YANGI FILE TANLANGAN BO‘LSA
-    if(imgFile.files.length > 0){
-      const file = imgFile.files[0];
-
-      // 1️⃣ Yangi rasmni yuklash
-      const ref = storage
-        .ref()
-        .child("questions/" + Date.now() + "_" + file.name);
-
-      const snap = await ref.put(file);
-      image = await snap.ref.getDownloadURL();
-
-      // 2️⃣ ESKI RASMNI O‘CHIRISH (agar bo‘lsa)
-      if(oldImage){
-        try{
-          await firebase.storage().refFromURL(oldImage).delete();
-        }catch(e){
-          console.warn("Eski rasm o‘chmadi:", e);
-        }
-      }
-    }
-    // agar URL qo‘lda yozilgan bo‘lsa
-    else if(imgUrl.value.trim() !== ""){
-      image = imgUrl.value.trim();
-    }
-
-    const q = {
-      text: qText.value.trim(),
-      image,
-      options:{
-        A: a.value.trim(),
-        B: b.value.trim(),
-        C: c.value.trim(),
-        D: d.value.trim()
-      },
-      correct: correct.value
-    };
-
-    if(editIndex === null){
-      questions.push(q);
-    } else {
-      questions[editIndex] = q;
-      editIndex = null;
-    }
-
-    // tozalash
-    qText.value = "";
-    imgUrl.value = "";
-    a.value = b.value = c.value = d.value = "";
-    imgFile.value = "";
-    correct.value = "";
-    imgPreview.style.display = "none";
-    removeImgBtn.style.display = "none";
-
-    render();
-
-  } catch(err){
-    console.error("Saqlashda xato:", err);
-    alert("Rasm yuklashda xato bo‘ldi");
+  if(imgFile.files[0]){
+    const ref = storage.ref(
+      "questions/" + Date.now() + "_" + imgFile.files[0].name
+    );
+    await ref.put(imgFile.files[0]);
+    image = await ref.getDownloadURL();
+  } else if(imgUrl.value){
+    image = imgUrl.value.trim();
   }
+
+  const q = {
+    text: qText.value,
+    image,
+    options:{A:a.value,B:b.value,C:c.value,D:d.value},
+    correct: correct.value
+  };
+
+  editIndex===null ? questions.push(q) : questions[editIndex]=q;
+  editIndex=null;
+
+  qText.value = imgUrl.value = a.value = b.value = c.value = d.value = "";
+  imgFile.value = "";
+  correct.value = "";
+  imgPreview.style.display="none";
+
+  render();
 }
 
 function render(){
@@ -274,57 +221,30 @@ function render(){
     questionList.innerHTML+=`
       <div class="qitem">
         <b>${i+1}. ${q.text}</b><br>
-
-        ${
-          q.image
-          ? `
-            <img src="${q.image}" style="max-width:200px;margin-top:8px"><br>
-            <button class="red" onclick="removeImage(${i})">
-              🗑 Rasmni o‘chirish
-            </button>
-          `
-          : ""
-        }
-
-        <div style="margin-top:8px">
-          <b>To‘g‘ri:</b> ${q.correct}
-        </div>
-
+        ${q.image?`<img src="${q.image}" style="max-width:200px;margin-top:8px">`:""}
+        <div><b>To‘g‘ri:</b> ${q.correct}</div>
         <button onclick="editQ(${i})">✏️</button>
         <button class="red" onclick="delQ(${i})">❌</button>
-      </div>
-    `;
+      </div>`;
   });
-
-  count.innerText = `Savollar: ${questions.length} / 50`;
+  count.innerText=`Savollar: ${questions.length} / 50`;
 }
-
 function editQ(i){
-  function editQ(i){
-  const q = questions[i];
-  editIndex = i;
+  const q=questions[i];
+  editIndex=i;
+  qText.value=q.text;
+  imgUrl.value=q.image||"";
+  a.value=q.options.A;
+  b.value=q.options.B;
+  c.value=q.options.C;
+  d.value=q.options.D;
+  correct.value=q.correct;
 
-  qText.value = q.text;
-  imgUrl.value = q.image || "";
+  imgFile.value = "";          // ✅ MUHIM: eski file state tozalanadi
 
-  a.value = q.options.A;
-  b.value = q.options.B;
-  c.value = q.options.C;
-  d.value = q.options.D;
-  correct.value = q.correct;
-
-  // ❗ file input hech qachon to‘ldirilmaydi
-  imgFile.value = "";
-
-  // ✅ MUHIM JOY — rasmni URL orqali qayta ko‘rsatish
   if(q.image){
-    previewImg.src = q.image;
-    imgPreview.style.display = "block";
-    removeImgBtn.style.display = "inline-block";
-  } else {
-    previewImg.src = "";
-    imgPreview.style.display = "none";
-    removeImgBtn.style.display = "none";
+    previewImg.src=q.image;
+    imgPreview.style.display="block";
   }
 }
 
@@ -413,5 +333,4 @@ loadSavedTests();
 
 </body>
 </html>
-
 
