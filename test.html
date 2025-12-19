@@ -15,52 +15,72 @@ body{
   justify-content:center;
   padding:30px;
 }
+
+/* MAIN CARD */
 .container{
   width:100%;
   max-width:920px;
   background:#fff;
-  padding:30px;
+  padding:32px;
   border-radius:28px;
   box-shadow:0 35px 90px rgba(0,0,0,.15);
 }
+
+/* TIMER */
 .timer{
   position:fixed;
   top:20px;
   right:20px;
   background:linear-gradient(135deg,#dc2626,#b91c1c);
   color:#fff;
-  padding:14px 22px;
+  padding:14px 24px;
   border-radius:999px;
+  font-size:20px;
   font-weight:900;
 }
+
+/* QUESTION */
 .question-box{
-  background:#f8fafc;
+  min-height:220px;               /* 🔑 sakramasligi uchun */
   border:2px solid #e5e7eb;
-  border-radius:20px;
-  padding:22px;
+  border-radius:22px;
+  padding:24px;
   font-size:22px;
   font-weight:800;
+  background:#f8fafc;
 }
-.question-box img{
-  max-width:100%;
-  margin-top:14px;
+.question-text{margin-bottom:12px}
+.image-wrap{
+  margin-top:12px;
+  max-height:220px;
+  overflow:hidden;
   border-radius:14px;
 }
+.image-wrap img{
+  max-width:100%;
+  max-height:220px;
+  object-fit:contain;
+  display:block;
+  margin:auto;
+}
+
+/* OPTIONS */
 .option{
   display:flex;
   align-items:center;
   gap:14px;
+  border:2px solid #e5e7eb;
+  border-radius:16px;
   padding:16px;
   margin-top:14px;
-  border-radius:16px;
-  border:2px solid #e5e7eb;
   cursor:pointer;
+  font-size:18px;
   transition:.2s;
 }
 .option::before{
   content:"";
-  width:20px;
-  height:20px;
+  width:18px;
+  height:18px;
   border-radius:50%;
   border:3px solid #c7d2fe;
 }
@@ -73,14 +93,8 @@ body{
   background:#4f46e5;
   border-color:#4f46e5;
 }
-.option.correct{
-  background:#dcfce7;
-  border-color:#16a34a;
-}
-.option.wrong{
-  background:#fee2e2;
-  border-color:#dc2626;
-}
+
+/* NAV */
 .nav{
   display:flex;
   justify-content:space-between;
@@ -88,12 +102,13 @@ body{
 }
 button{
   padding:14px 26px;
+  font-size:16px;
+  font-weight:900;
   border:none;
   border-radius:16px;
-  font-weight:900;
   cursor:pointer;
   background:linear-gradient(135deg,#6366f1,#4f46e5);
-  color:#fff;
+  color:white;
 }
 .finish{
   width:100%;
@@ -101,39 +116,57 @@ button{
   background:linear-gradient(135deg,#22c55e,#16a34a);
 }
 
-/* MODAL */
+/* RESULT MODAL */
 .modal{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.55);
+  background:rgba(15,23,42,.65);
   display:none;
   justify-content:center;
   align-items:center;
   z-index:999;
 }
 .modal-box{
-  background:#fff;
-  padding:36px;
-  border-radius:26px;
+  background:linear-gradient(135deg,#ffffff,#f8fafc);
+  padding:40px;
+  border-radius:28px;
   width:100%;
-  max-width:460px;
+  max-width:520px;
   text-align:center;
-  box-shadow:0 30px 80px rgba(0,0,0,.35);
+  box-shadow:0 40px 120px rgba(0,0,0,.4);
+}
+.modal-title{
+  font-size:26px;
+  font-weight:900;
 }
 .score{
-  font-size:44px;
+  font-size:48px;
   font-weight:900;
-  margin:14px 0;
+  margin:16px 0;
+}
+.badges{
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  margin:18px 0;
 }
 .badge{
-  display:inline-block;
   padding:8px 18px;
   border-radius:999px;
   font-weight:900;
-  margin:6px;
 }
 .ok{background:#dcfce7;color:#166534}
 .no{background:#fee2e2;color:#991b1b}
+.info{color:#475569;font-weight:700}
+
+/* ANALYSIS */
+.correct{background:#dcfce7;border-color:#16a34a}
+.wrong{background:#fee2e2;border-color:#dc2626}
+.note{
+  margin-top:8px;
+  font-size:15px;
+  font-weight:700;
+}
 </style>
 </head>
 
@@ -142,7 +175,13 @@ button{
 <div class="timer" id="timer"></div>
 
 <div class="container" id="main">
-  <div class="question-box" id="qBox"></div>
+  <div class="question-box">
+    <div class="question-text" id="qText"></div>
+    <div class="image-wrap" id="qImgWrap" style="display:none">
+      <img id="qImg">
+    </div>
+  </div>
+
   <div id="options"></div>
 
   <div class="nav">
@@ -155,13 +194,19 @@ button{
   </button>
 </div>
 
-<!-- NATIJA MODALI -->
+<!-- RESULT MODAL -->
 <div class="modal" id="resultModal">
   <div class="modal-box">
-    <h2 id="resultTitle"></h2>
+    <div class="modal-title" id="resultTitle"></div>
     <div class="score" id="resultScore"></div>
-    <div id="resultInfo"></div>
-    <button onclick="goAnalysis()">Davom etish</button>
+
+    <div class="badges">
+      <div class="badge ok" id="okCount"></div>
+      <div class="badge no" id="noCount"></div>
+    </div>
+
+    <div class="info">Natijani ko‘rib chiqishingiz mumkin</div>
+    <button style="margin-top:20px" onclick="showAnalysis()">Davom etish</button>
   </div>
 </div>
 
@@ -180,7 +225,7 @@ const testId=sessionStorage.getItem("currentTestId");
 const user=JSON.parse(sessionStorage.getItem("currentUser")||"{}");
 if(!testId||!user.ism) location.href="index.html";
 
-let test,index=0,answers={},timeLeft=0,finished=false;
+let test,index=0,answers={},timeLeft=0,finished=false,finalData=null;
 
 db.collection("tests").doc(testId).get().then(d=>{
   test=d.data();
@@ -201,7 +246,15 @@ function startTimer(){
 
 function render(){
   const q=test.questions[index];
-  qBox.innerHTML=`${index+1}. ${q.text}${q.image?`<img src="${q.image}">`:""}`;
+  qText.innerText=`${index+1}. ${q.text}`;
+
+  if(q.image){
+    qImg.src=q.image;
+    qImgWrap.style.display="block";
+  }else{
+    qImgWrap.style.display="none";
+  }
+
   options.innerHTML="";
   ["A","B","C","D"].forEach(k=>{
     if(!q.options[k]) return;
@@ -210,6 +263,7 @@ function render(){
         ${k}) ${q.options[k]}
       </div>`;
   });
+
   finishBtn.style.display=index===test.questions.length-1?"block":"none";
 }
 function choose(v){answers[index]=v;render();}
@@ -221,61 +275,47 @@ function finish(){
   finished=true;
 
   let correct=0;
-  const answersFull=[];
+  const list=[];
   test.questions.forEach((q,i)=>{
     if(answers[i]===q.correct) correct++;
-    answersFull.push({
-      question:q.text,
-      image:q.image||"",
-      options:q.options,
-      correct:q.correct,
-      selected:answers[i]||null
-    });
+    list.push({...q,selected:answers[i]||null});
   });
 
   const ball=correct*2;
   let title="❌ Attestatsiya Mock testidan o‘tmadingiz";
-  if(ball>=80) title="🔵 Oliy toifa balini to‘pladingiz";
-  else if(ball>=70) title="🟡 Birinchi toifa balini to‘pladingiz";
-  else if(ball>=60) title="🟠 Ikkinchi toifa balini to‘pladingiz";
+  if(ball>=80) title="🔵 Oliy toifa";
+  else if(ball>=70) title="🟡 Birinchi toifa";
+  else if(ball>=60) title="🟠 Ikkinchi toifa";
 
-  window.finalResult={
-    ism:user.ism,
-    familiya:user.familiya,
-    testId,
-    ball,
-    time:new Date().toLocaleString(),
-    answers:answersFull
-  };
+  finalData={ball,correct,wrong:list.length-correct,list};
 
   resultTitle.innerText=title;
   resultScore.innerText=`${ball} ball`;
-  resultInfo.innerHTML=`
-    <span class="badge ok">To‘g‘ri: ${correct}</span>
-    <span class="badge no">Noto‘g‘ri: ${test.questions.length-correct}</span>
-  `;
+  okCount.innerText=`To‘g‘ri: ${correct}`;
+  noCount.innerText=`Noto‘g‘ri: ${list.length-correct}`;
   resultModal.style.display="flex";
 }
 
-async function goAnalysis(){
-  await db.collection("results").add(window.finalResult);
+function showAnalysis(){
   resultModal.style.display="none";
   timer.style.display="none";
 
   let html="<h2>📊 Test tahlili</h2>";
-  window.finalResult.answers.forEach((a,i)=>{
+  finalData.list.forEach((q,i)=>{
     html+=`
       <div class="question-box" style="margin-top:20px">
-        ${i+1}. ${a.question}
-        ${a.image?`<img src="${a.image}">`:""}
+        ${i+1}. ${q.text}
+        ${q.image?`<div class="image-wrap"><img src="${q.image}"></div>`:""}
     `;
-    for(const k in a.options){
+    for(const k in q.options){
       let cls="option";
-      if(k===a.correct) cls+=" correct";
-      else if(k===a.selected) cls+=" wrong";
-      html+=`<div class="${cls}">${k}) ${a.options[k]}</div>`;
+      if(k===q.correct) cls+=" correct";
+      else if(k===q.selected) cls+=" wrong";
+      html+=`<div class="${cls}">${k}) ${q.options[k]}</div>`;
     }
-    html+=`</div>`;
+    html+=`
+      <div class="note">✔ To‘g‘ri javob: ${q.correct} | ✖ Sizning javobingiz: ${q.selected||"-"}</div>
+      </div>`;
   });
   main.innerHTML=html;
 }
