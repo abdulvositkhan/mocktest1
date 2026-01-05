@@ -359,21 +359,27 @@ order.forEach(k=>{
 }
 
 function showClosed(r){
-  main.innerHTML=`
+  // 🔑 MUHIM: natijani globalga yozib qo‘yamiz
+  finalResult = r;
+
+  main.innerHTML = `
     <div class="banner">
-      Siz bu testni topshirgansiz. Test qayta ochilgandan keyin yana topshira olasiz.
+      Siz bu testni topshirgansiz. 
+      Test qayta ochilgandan keyin yana topshira olasiz.
       <br><br>
-      <button onclick='showAnalysisFromSaved(${JSON.stringify(r)})'>📊 Tahlilni ko‘rish</button>
-    </div>`;
+      <button onclick="showAnalysis()">
+        📊 Tahlilni ko‘rish
+      </button>
+    </div>
+  `;
 }
 
-function showAnalysisFromSaved(r){
-  finalResult=r;
-  showAnalysis();
-}
+
+
 </script>
 
 </body>
 </html>
+
 
 
