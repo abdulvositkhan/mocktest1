@@ -454,8 +454,10 @@ async function loadTest(id){
   questions = t.questions || [];
 
   render();
+  // ✅ TESTNI TAHRIRLASH BOSILGANDA YUQORIGA O‘TSIN
+  document.getElementById("editSection")
+    .scrollIntoView({ behavior:"smooth", block:"start" });
 }
-
 /* EXCEL */
 function loadExcel(){
   const f=excelFile.files[0];
@@ -486,5 +488,6 @@ loadSavedTests();
 
 </body>
 </html>
+
 
 
