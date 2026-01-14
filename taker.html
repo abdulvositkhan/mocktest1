@@ -81,6 +81,7 @@ button{
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <script>
 /* 🔥 FIREBASE CONFIG — O‘ZINGIZNIKI */
@@ -96,6 +97,10 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const auth = firebase.auth();
+auth.signInAnonymously().catch(err => {
+  console.error("Anonymous auth error", err);
+});
 
 async function start(){
   error.innerText = "";
@@ -160,6 +165,7 @@ async function start(){
 
 </body>
 </html>
+
 
 
 
