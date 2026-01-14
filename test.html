@@ -198,6 +198,8 @@ button{
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
 
 <script>
 firebase.initializeApp({
@@ -205,7 +207,14 @@ firebase.initializeApp({
   authDomain:"mock-8b900.firebaseapp.com",
   projectId:"mock-8b900"
 });
-const db=firebase.firestore();
+
+const auth = firebase.auth();
+auth.signInAnonymously().catch(err => {
+  console.error("Anonymous auth error", err);
+});
+
+const db = firebase.firestore();
+
 
 const testId=sessionStorage.getItem("currentTestId");
 const user=JSON.parse(sessionStorage.getItem("currentUser")||"{}");
@@ -405,6 +414,7 @@ function showClosed(r){
 
 </body>
 </html>
+
 
 
 
