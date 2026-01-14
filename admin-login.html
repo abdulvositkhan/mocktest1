@@ -58,6 +58,19 @@ button{
 }
 </style>
 </head>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyDMyRSvTXXxkgTPyeZSeVnpHgh1tH4lJjE",
+  authDomain:"mock-8b900.firebaseapp.com",
+  projectId:"mock-8b900"
+});
+
+const auth = firebase.auth();
+auth.signInAnonymously();
+</script>
 
 <body>
 
@@ -86,4 +99,5 @@ function login(){
 
 </body>
 </html>
+
 
