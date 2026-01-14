@@ -181,6 +181,7 @@ th{background:#f1f5f9;font-weight:900}
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <script>
 firebase.initializeApp({
@@ -188,7 +189,14 @@ firebase.initializeApp({
   authDomain:"mock-8b900.firebaseapp.com",
   projectId:"mock-8b900"
 });
-const db=firebase.firestore();
+
+const auth = firebase.auth();
+auth.signInAnonymously().catch(err => {
+  console.error("Anonymous auth error", err);
+});
+
+const db = firebase.firestore();
+
 
 const viewer = sessionStorage.getItem("viewer")==="admin" ? "admin" : "student";
 const user = JSON.parse(sessionStorage.getItem("currentUser")||"{}");
@@ -301,4 +309,5 @@ function openDetail(r){
 
 </body>
 </html>
+
 
