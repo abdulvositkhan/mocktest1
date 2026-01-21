@@ -176,19 +176,8 @@ th{background:#f1f5f9;font-weight:900}
   <div id="testList" class="test-list"></div>
   <div id="summary"></div>
 
-  <table class="table">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Ism</th>
-        <th>Familiya</th>
-        <th>Ball</th>
-        <th>Vaqt</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody id="rows"></tbody>
-  </table>
+  <div id="rows"></div>
+
 
   <div class="footer">@Ped_Life_Uz</div>
 </div>
@@ -261,50 +250,63 @@ Promise.all([
 });
 
 function renderAdminBySubject(){
+  rows.innerHTML = "";
   testList.style.display = "none";
   summary.innerHTML = "";
-  rows.innerHTML = "";
 
-  const groups = {};
+  const subjectGroups = {};
 
+  // 1️⃣ Fan bo‘yicha
   allResults.forEach(r=>{
     const subject = testSubjects[r.testId] || "Boshqa";
-    if(!groups[subject]) groups[subject] = [];
-    groups[subject].push(r);
+    if(!subjectGroups[subject]) subjectGroups[subject] = {};
+    if(!subjectGroups[subject][r.testId]) subjectGroups[subject][r.testId] = [];
+    subjectGroups[subject][r.testId].push(r);
   });
 
-  let i = 0;
-  for(const subject in groups){
-    const panelId = `sub_${i++}`;
+  let s = 0;
+  for(const subject in subjectGroups){
+    const subjectId = `subject_${s++}`;
 
- rows.innerHTML += `
-  <div class="qitem">
-    <button class="folder-btn" onclick="toggleFolder('${panelId}', this)">
-      📁 ${subject}
-      <span>▶</span>
-    </button>
+    rows.innerHTML += `
+      <div class="qitem">
+        <button class="folder-btn" onclick="toggleFolder('${subjectId}', this)">
+          📁 ${subject}
+          <span>▶</span>
+        </button>
 
-    <div class="folder-content" id="${panelId}">
-      ${renderResultsByTest(groups[subject])}
-    </div>
-  </div>
-`;
-
+        <div class="folder-content" id="${subjectId}">
+          ${renderTestsInSubject(subjectGroups[subject])}
+        </div>
+      </div>
+    `;
   }
 }
 
-/* ADMIN */
-function renderTests(){
-  const testIds=[...new Set(allResults.map(r=>r.testId))];
-  testList.innerHTML="";
-  testIds.forEach(id=>{
-    const btn=document.createElement("button");
-    btn.className="test-btn";
-    btn.innerText=id;
-    btn.onclick=()=>selectTest(id,btn);
-    testList.appendChild(btn);
-  });
+
+function renderTestsInSubject(tests){
+  let html = "";
+  let t = 0;
+
+  for(const testId in tests){
+    const testPanel = `test_${testId}_${t++}`;
+
+    html += `
+      <div style="margin-left:20px">
+        <button class="folder-btn" onclick="toggleFolder('${testPanel}', this)">
+          📄 ${testId}
+          <span>▶</span>
+        </button>
+
+        <div class="folder-content" id="${testPanel}">
+          ${renderResultsByTest(tests[testId])}
+        </div>
+      </div>
+    `;
+  }
+  return html;
 }
+
 
 function selectTest(id,btn){
   currentTestId=id;
@@ -403,6 +405,7 @@ function openDetail(r){
 
 </body>
 </html>
+
 
 
 
