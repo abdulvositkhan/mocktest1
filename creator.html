@@ -487,6 +487,33 @@ await ref.set({
 
   showModal("Muvaffaqiyat","Test saqlandi. Version: "+version);
   loadSavedTests();
+  // 🔄 HAMMASINI TOZALASH
+testId.value = "";
+subject.value = "";
+date.value = "";
+endDate.value = "";
+start.value = "";
+end.value = "";
+duration.value = "";
+
+questions = [];
+editIndex = null;
+currentImage = "";
+
+qText.value = "";
+imgUrl.value = "";
+imgFile.value = "";
+a.value = "";
+b.value = "";
+c.value = "";
+d.value = "";
+correct.value = "";
+
+imgPreview.style.display = "none";
+uploadStatus.innerText = "";
+
+render();
+
 }
 
 /* LOAD TESTS */
@@ -608,6 +635,7 @@ loadSavedTests();
 
 </body>
 </html>
+
 
 
 
