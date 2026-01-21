@@ -143,6 +143,28 @@ th{background:#f1f5f9;font-weight:900}
   font-weight:900;
   color:#4f46e5;
 }
+  /* 📁 FAN PAPKALARI (RESULTS UCHUN) */
+.folder-btn{
+  width:100%;
+  text-align:left;
+  background:#f8fafc;
+  border:2px solid #e5e7eb;
+  border-radius:16px;
+  padding:14px 18px;
+  font-weight:900;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  cursor:pointer;
+  margin:12px 0;
+}
+
+.folder-content{
+  display:none;
+  margin-top:10px;
+  padding-left:10px;
+}
+
 </style>
 </head>
 
@@ -206,26 +228,38 @@ const rows=document.getElementById("rows");
 const summary=document.getElementById("summary");
 const modalDetails=document.getElementById("modalDetails");
 
-  let testSubjects = {}; // testId -> subject
-let allResults=[];
-let currentTestId=null;
+ let testSubjects = {}; // testId -> subject
+let allResults = [];
 
-db.collection("results")
-  .orderBy("ball","desc")
-  .get()
-  .then(snap=>{
-    snap.forEach(d=>allResults.push(d.data()));
-   if(viewer==="admin") renderAdminBySubject();
-    else renderStudent();
-  });
-db.collection("tests").get().then(snap=>{
-  snap.forEach(doc=>{
+Promise.all([
+  db.collection("tests").get(),
+  db.collection("results").orderBy("ball","desc").get()
+]).then(([testsSnap, resultsSnap])=>{
+
+  // 1️⃣ testId → subject mapping
+  testsSnap.forEach(doc=>{
     const t = doc.data();
     if(t.testId && t.subject){
       testSubjects[t.testId] = t.subject;
     }
   });
+
+  // 2️⃣ results yig‘iladi
+  resultsSnap.forEach(doc=>{
+    allResults.push(doc.data());
+  });
+
+  // 3️⃣ render
+  if(viewer === "admin"){
+    renderAdminBySubject();
+  }else{
+    renderStudent();
+  }
+
+}).catch(err=>{
+  console.error("Yuklashda xatolik:", err);
 });
+
 function renderAdminBySubject(){
   testList.style.display = "none";
   summary.innerHTML = "";
@@ -243,20 +277,19 @@ function renderAdminBySubject(){
   for(const subject in groups){
     const panelId = `sub_${i++}`;
 
-    rows.innerHTML += `
-      <tr>
-        <td colspan="6">
-          <button class="folder-btn" onclick="toggleFolder('${panelId}', this)">
-            📁 ${subject}
-            <span>▶</span>
-          </button>
+ rows.innerHTML += `
+  <div class="qitem">
+    <button class="folder-btn" onclick="toggleFolder('${panelId}', this)">
+      📁 ${subject}
+      <span>▶</span>
+    </button>
 
-          <div class="folder-content" id="${panelId}">
-            ${renderResultsByTest(groups[subject])}
-          </div>
-        </td>
-      </tr>
-    `;
+    <div class="folder-content" id="${panelId}">
+      ${renderResultsByTest(groups[subject])}
+    </div>
+  </div>
+`;
+
   }
 }
 
@@ -370,6 +403,7 @@ function openDetail(r){
 
 </body>
 </html>
+
 
 
 
