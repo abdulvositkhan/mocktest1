@@ -208,23 +208,21 @@ button:hover{transform:translateY(-1px)}
     grid-template-columns: 1fr 1fr;
   }
 }
-/* 🔹 FAQAT TEPADAGI 8 TA KATAK — OCH YASHIL */
-.test-meta input,
-.test-meta select{
-  background-color: #ecfdf5;   /* och yashil */
-  border: 2px solid #34d399;
-  transition: all .15s ease;
+/* Sana, vaqt, davomiylik kataklari */
+.row input[type="date"],
+.row input[type="time"],
+.row input[type="number"]{
+  background: #ecfdf5;        /* och yashil */
+  border-color: #34d399;      /* yashil border */
 }
 
-/* 🔥 BOSILGANDA — ATROFI TO‘Q SARIQ / MALLA */
-.test-meta input:focus,
-.test-meta select:focus{
-  background-color: #ecfdf5;   /* ichi o‘zgarmaydi */
-  border-color: #c2410c;       /* to‘q malla */
-  box-shadow:
-    0 0 0 3px rgba(194,65,12,.35),
-    0 0 0 6px rgba(234,88,12,.25);
-  outline: none;
+/* Bosilganda (focus) */
+.row input[type="date"]:focus,
+.row input[type="time"]:focus,
+.row input[type="number"]:focus{
+  background: #d1fae5;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16,185,129,.25);
 }
 
 
@@ -670,6 +668,7 @@ loadSavedTests();
 
 </body>
 </html>
+
 
 
 
