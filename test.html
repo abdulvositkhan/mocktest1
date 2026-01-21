@@ -200,16 +200,6 @@ button{
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
-function isTestOpen(test){
-  if(!test.date || !test.start || !test.end) return true;
-
-  const now = new Date();
-
-  const startTime = new Date(`${test.date}T${test.start}`);
-  const endTime   = new Date(`${test.date}T${test.end}`);
-
-  return now >= startTime && now <= endTime;
-}
 
   
 <script>
@@ -259,21 +249,6 @@ function loadProgress(){
 db.collection("tests").doc(testId).get().then(async d=>{
   test=d.data();
   const ver=test.version||1;
-  // ⛔ TEST OCHIQ YOKI YO‘QLIGINI TEKSHIRISH
-  if(!isTestOpen(test)){
-    main.innerHTML = `
-      <div class="banner">
-        ⛔ Test hozir yopiq.<br><br>
-        Test vaqti: <b>${test.start} – ${test.end}</b><br>
-        Sana: <b>${test.date}</b><br><br>
-        Test belgilangan vaqtda avtomatik ochiladi.
-        <br><br>
-        Attestatsiya Mock Test @Ped_Life_Uz
-      </div>
-    `;
-    timer.style.display="none";
-    return;
-  }
 
   const snap=await db.collection("results")
     .where("testId","==",testId)
@@ -440,6 +415,7 @@ function showClosed(r){
 
 </body>
 </html>
+
 
 
 
