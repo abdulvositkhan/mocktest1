@@ -208,6 +208,22 @@ button:hover{transform:translateY(-1px)}
     grid-template-columns: 1fr 1fr;
   }
 }
+/* Sana, vaqt, davomiylik kataklari */
+.row input[type="date"],
+.row input[type="time"],
+.row input[type="number"]{
+  background: #ecfdf5;        /* och yashil */
+  border-color: #34d399;      /* yashil border */
+}
+
+/* Bosilganda (focus) */
+.row input[type="date"]:focus,
+.row input[type="time"]:focus,
+.row input[type="number"]:focus{
+  background: #d1fae5;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16,185,129,.25);
+}
 
 </style>
 </head>
@@ -650,6 +666,7 @@ loadSavedTests();
 
 </body>
 </html>
+
 
 
 
