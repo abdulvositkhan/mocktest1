@@ -288,6 +288,10 @@ select:disabled{
   background:#dcfce7;
   color:#166534;
 }
+.status.upcoming{
+  background:#e0f2fe;
+  color:#075985;
+}
 
 .status.ended{
   background:#fee2e2;
@@ -616,14 +620,25 @@ render();
 
 }
 
-  function getTestStatus(t){
-  if(!t.endDate || !t.end) return "unknown";
+function getTestStatus(t){
+  if(!t.startDate || !t.start || !t.endDate || !t.end){
+    return "unknown";
+  }
 
   const now = new Date();
 
-  const end = new Date(`${t.endDate}T${t.end}`);
+  const start = new Date(`${t.startDate}T${t.start}`);
+  const end   = new Date(`${t.endDate}T${t.end}`);
 
-  return now <= end ? "active" : "ended";
+  if(now < start){
+    return "upcoming";   // ⏳ Boshlanmagan
+  }
+
+  if(now >= start && now <= end){
+    return "active";     // 🟢 Active
+  }
+
+  return "ended";        // 🔴 Tugagan
 }
 
 /* LOAD TESTS */
@@ -659,7 +674,12 @@ Object.keys(groups).forEach((subject, i)=>{
           return `
             <div class="test-row">
               <span class="status ${status}">
-                ${status === "active" ? "🟢 Active" : "🔴 Tugagan"}
+              ${
+  status === "active"   ? "🟢 Active" :
+  status === "upcoming" ? "⏳ Boshlanmagan" :
+                           "🔴 Tugagan"
+}
+
               </span>
 
               <b>${t.testId}</b>
@@ -786,6 +806,7 @@ loadSavedTests();
 
 </body>
 </html>
+
 
 
 
