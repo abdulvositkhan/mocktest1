@@ -186,6 +186,28 @@ button:hover{transform:translateY(-1px)}
   overflow-y: auto;
   padding-right: 6px;
 }
+.row{
+  display: grid;
+  grid-template-columns:
+    1fr
+    1fr
+    0.8fr
+    0.8fr
+    0.8fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.row input{
+  width: 100%;
+  min-width: 0;
+}
+/* 📱 Telefon va kichik ekranlar */
+@media (max-width: 768px){
+  .row{
+    grid-template-columns: 1fr 1fr;
+  }
+}
 
 </style>
 </head>
@@ -223,16 +245,9 @@ sessionStorage.setItem("viewer","admin");
 </select>
 
 <div class="row">
-  <input type="date" id="date" placeholder="Boshlanish sanasi">
-  <input type="date" id="endDate" placeholder="Tugash sanasi">
-</div>
-
-<div class="row">
+  <input type="date" id="date">
+  <input type="date" id="endDate">
   <input type="number" id="duration" placeholder="Davomiylik (daq)">
-</div>
-
-
-<div class="row">
   <input type="time" id="start">
   <input type="time" id="end">
 </div>
@@ -635,6 +650,7 @@ loadSavedTests();
 
 </body>
 </html>
+
 
 
 
