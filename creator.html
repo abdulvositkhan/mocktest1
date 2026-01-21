@@ -142,13 +142,43 @@ button:hover{transform:translateY(-1px)}
   word-break: break-word;    /* uzun so‘zlarni bo‘ladi */
   margin-bottom: 10px;
 }
-/* FLOATING SAVE BUTTON */
-#floatingSave{
-  position:fixed;
-  right:24px;
-  bottom:24px;
-  z-index:2000;
-  box-shadow:0 20px 40px rgba(0,0,0,.25);
+.workspace{
+  display:grid;
+  grid-template-columns: 1fr 420px;
+  gap:24px;
+  align-items:start;
+}
+
+.question-panel{
+  position: sticky;
+  top: 24px;
+  max-height: calc(100vh - 60px);
+  overflow-y: auto;
+  background:#f8fafc;
+  border-radius:24px;
+  padding:20px;
+  border:2px solid #e5e7eb;
+}
+
+.question-panel:hover{
+  overscroll-behavior: contain;
+}
+
+.sticky-actions{
+  position: sticky;
+  bottom: 0;
+  background:#f8fafc;
+  padding-top:16px;
+  margin-top:16px;
+}
+@media (max-width: 1000px){
+  .workspace{
+    grid-template-columns: 1fr;
+  }
+  .question-panel{
+    position: relative;
+    max-height: none;
+  }
 }
 
 </style>
@@ -210,11 +240,14 @@ sessionStorage.setItem("viewer","admin");
 
 <hr>
 
-<h2 id="editSection">✍️ Savol qo‘shish / tahrirlash</h2>
+<div class="workspace">
 
-<div class="qbox">
+  <!-- CHAP TOMON -->
+  <div class="editor">
+    <h2 id="editSection">✍️ Savol qo‘shish / tahrirlash</h2>
 
-<textarea id="qText" rows="3" placeholder="Savol matni"></textarea>
+    <div class="qbox">
+     <textarea id="qText" rows="3" placeholder="Savol matni"></textarea>
 
 <input id="imgUrl" placeholder="Rasm URL (ixtiyoriy)">
 <input type="file" id="imgFile" accept="image/*" onchange="previewImage()">
@@ -242,23 +275,22 @@ sessionStorage.setItem("viewer","admin");
 <button class="blue" onclick="saveQuestion()">💾 Savolni saqlash</button>
 <div id="count" class="badge">Savollar: 0 / 50</div>
 
+    </div>
+  </div>
+
+  <!-- O‘NG TOMON -->
+  <div class="question-panel">
+    <h2>📋 Savollar ro‘yxati</h2>
+    <div id="questionList"></div>
+
+    <div class="sticky-actions">
+      <button class="green" onclick="saveTest()">💾 TESTNI SAQLASH</button>
+      <button class="blue" onclick="location.href='results.html'">📊 Natijalar</button>
+    </div>
+  </div>
+
 </div>
 
-<hr>
-
-<h2>📋 Savollar ro‘yxati</h2>
-<div id="questionList"></div>
-
-<div class="actions">
-  <button class="green" onclick="saveTest()">💾 TESTNI SAQLASH</button>
-  <button class="blue" onclick="location.href='results.html'">📊 Natijalar</button>
-  <button class="blue" onclick="openNewQuestionModal()">
-  ➕ Yangi savol
-</button>
-
-</div>
-
-<hr>
 
 <h2>📚 Saqlangan testlar</h2>
 <div id="savedTests"></div>
@@ -385,19 +417,22 @@ function render(){
 
 /* EDIT */
 function editQ(i){
-  const q = questions[i];
-  editModalIndex = i;
+  const q=questions[i];
+  editIndex=i;
+  qText.value=q.text;
+  a.value=q.options.A;
+  b.value=q.options.B;
+  c.value=q.options.C;
+  d.value=q.options.D;
+  correct.value=q.correct;
+  currentImage=q.image||"";
 
-  modalQTitle.innerText = "✏️ Savolni tahrirlash";
-
-  e_qText.value = q.text;
-  e_a.value = q.options.A;
-  e_b.value = q.options.B;
-  e_c.value = q.options.C;
-  e_d.value = q.options.D;
-  e_correct.value = q.correct;
-
-  editModal.style.display = "flex";
+  if(q.image){
+    previewImg.src=q.image;
+    imgPreview.style.display="block";
+  }
+  document.getElementById("editSection")
+    .scrollIntoView({behavior:"smooth"});
 }
 
 /* SAVE TEST */
@@ -446,24 +481,6 @@ await ref.set({
 
   showModal("Muvaffaqiyat","Test saqlandi. Version: "+version);
   loadSavedTests();
-}
-function openNewQuestionModal(){
-  if(questions.length >= 50){
-    showModal("Limit","50 ta savol limit");
-    return;
-  }
-
-  editModalIndex = null;
-  modalQTitle.innerText = "➕ Yangi savol";
-
-  e_qText.value = "";
-  e_a.value = "";
-  e_b.value = "";
-  e_c.value = "";
-  e_d.value = "";
-  e_correct.value = "A";
-
-  editModal.style.display = "flex";
 }
 
 /* LOAD TESTS */
@@ -576,77 +593,12 @@ function loadExcel(){
   };
   r.readAsArrayBuffer(f);
 }
-function saveEdit(){
-  if(!e_qText.value){
-    showModal("Xatolik","Savol matni bo‘sh");
-    return;
-  }
-
-  const q = {
-    text: e_qText.value,
-    image: "",
-    options:{
-      A:e_a.value,
-      B:e_b.value,
-      C:e_c.value,
-      D:e_d.value
-    },
-    correct:e_correct.value
-  };
-
-  if(editModalIndex === null){
-    questions.push(q);
-  }else{
-    questions[editModalIndex] = {
-      ...questions[editModalIndex],
-      ...q
-    };
-  }
-
-  render();
-  closeEditModal();
-}
-
-function closeEditModal(){
-  editModal.style.display = "none";
-  editModalIndex = null;
-}
 
 loadSavedTests();
 </script>
-<!-- FLOATING SAVE TEST BUTTON -->
-<div id="floatingSave">
-  <button class="green" onclick="saveTest()">💾 Testni saqlash</button>
-</div>
-<!-- QUESTION EDIT MODAL -->
-<div class="modal" id="editModal">
-  <div class="modal-box" style="max-width:720px;text-align:left">
-    <h3 id="modalQTitle">Savol</h3>
-
-    <textarea id="e_qText" rows="3" placeholder="Savol matni"></textarea>
-
-    <textarea id="e_a" rows="2" placeholder="A variant"></textarea>
-    <textarea id="e_b" rows="2" placeholder="B variant"></textarea>
-    <textarea id="e_c" rows="2" placeholder="C variant"></textarea>
-    <textarea id="e_d" rows="2" placeholder="D variant"></textarea>
-
-    <select id="e_correct">
-      <option>A</option>
-      <option>B</option>
-      <option>C</option>
-      <option>D</option>
-    </select>
-
-    <div style="text-align:right;margin-top:16px">
-      <button class="red" onclick="closeEditModal()">Bekor</button>
-      <button class="green" onclick="saveEdit()">💾 Saqlash</button>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>
-
 
 
 
