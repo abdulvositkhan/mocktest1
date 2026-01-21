@@ -290,7 +290,7 @@ function renderTestFolders(tests){
   let i = 0;
 
   for(const testId in tests){
-    const testBoxId = `test_${i++}`;
+    const testBoxId = `test_${testId}`;
 
     html += `
       <div style="margin-left:24px">
@@ -310,31 +310,6 @@ function renderTestFolders(tests){
 }
 
 
-
-function renderTestsInSubject(tests){
-  let html = "";
-  let t = 0;
-
-  for(const testId in tests){
-    const testPanel = `test_${testId}_${t++}`;
-
-    html += `
-      <div style="margin-left:20px">
-        <button class="folder-btn" onclick="toggleFolder('${testPanel}', this)">
-          📄 ${testId}
-          <span>▶</span>
-        </button>
-
-        <div class="folder-content" id="${testPanel}">
-          ${renderResultsByTest(tests[testId])}
-        </div>
-      </div>
-    `;
-  }
-  return html;
-}
-
-
 function selectTest(id,btn){
   currentTestId=id;
   document.querySelectorAll(".test-btn").forEach(b=>b.classList.remove("active"));
@@ -342,18 +317,23 @@ function selectTest(id,btn){
   renderAdminTable();
 }
 function toggleFolder(id, btn){
-  const el = document.getElementById(id);
-  const arrow = btn.querySelector("span");
+  const current = document.getElementById(id);
+  const isOpen = current.style.display === "block";
 
-  if(el.style.display === "block"){
-    el.style.display = "none";
-    arrow.innerText = "▶";
-  }else{
-    el.style.display = "block";
-    arrow.innerText = "▼";
+  // 1️⃣ Shu darajadagi barcha papkalarni yopish
+  const parent = btn.closest(".qitem") || btn.parentElement;
+  const allContents = parent.querySelectorAll(".folder-content");
+  const allButtons = parent.querySelectorAll(".folder-btn span");
+
+  allContents.forEach(el => el.style.display = "none");
+  allButtons.forEach(sp => sp.innerText = "▶");
+
+  // 2️⃣ Agar yopiq bo‘lsa — ochamiz
+  if(!isOpen){
+    current.style.display = "block";
+    btn.querySelector("span").innerText = "▼";
   }
 }
-
 function renderResultsByTest(list){
   return `
     <table class="table">
@@ -432,6 +412,7 @@ function openDetail(r){
 
 </body>
 </html>
+
 
 
 
