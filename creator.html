@@ -162,9 +162,14 @@ sessionStorage.setItem("viewer","admin");
 <input id="testId" placeholder="Test ID (masalan: MAT2025)">
 
 <div class="row">
-  <input type="date" id="date">
+  <input type="date" id="date" placeholder="Boshlanish sanasi">
+  <input type="date" id="endDate" placeholder="Tugash sanasi">
+</div>
+
+<div class="row">
   <input type="number" id="duration" placeholder="Davomiylik (daq)">
 </div>
+
 
 <div class="row">
   <input type="time" id="start">
@@ -384,14 +389,26 @@ async function saveTest(){
     version=(snap.data().version||1)+1;
   }
 
-  await ref.set({
-    date:date.value,
-    start:start.value,
-    end:end.value,
-    duration:duration.value,
-    version,
-    questions
-  });
+ if(!date.value || !endDate.value){
+  showModal("Xatolik","Boshlanish va tugash sanasi majburiy");
+  return;
+}
+
+if(new Date(endDate.value) < new Date(date.value)){
+  showModal("Xatolik","Tugash sanasi boshlanish sanasidan oldin bo‘lishi mumkin emas");
+  return;
+}
+
+await ref.set({
+  startDate: date.value,
+  endDate: endDate.value,
+  start: start.value,
+  end: end.value,
+  duration: duration.value,
+  version,
+  questions
+});
+
 
   showModal("Muvaffaqiyat","Test saqlandi. Version: "+version);
   loadSavedTests();
@@ -452,7 +469,8 @@ async function loadTest(id){
   const t = d.data();
 
   testId.value = id;
-  date.value = t.date || "";
+  date.value = t.startDate || "";
+endDate.value = t.endDate || "";
   start.value = t.start || "";
   end.value = t.end || "";
   duration.value = t.duration || "";
@@ -493,6 +511,7 @@ loadSavedTests();
 
 </body>
 </html>
+
 
 
 
