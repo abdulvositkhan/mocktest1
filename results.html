@@ -272,68 +272,43 @@ function renderAdminBySubject(){
     const subjectId = `subject_${s++}`;
 
     rows.innerHTML += `
-      <div class="qitem">
-        <button class="folder-btn" onclick="toggleFolder('${subjectId}', this)">
-          📁 ${subject}
-          <span>▶</span>
-        </button>
+  <div class="qitem">
+    <button class="folder-btn subject-btn"
+            onclick="toggleSubject('${subjectId}', this)">
+      📁 ${subject}
+      <span>▶</span>
+    </button>
 
-        <div class="folder-content" id="${subjectId}">
-          ${renderTestFolders(subjects[subject])}
-        </div>
-      </div>
-    `;
+    <div class="folder-content subject-folder" id="${subjectId}">
+      ${renderTestFolders(subjects[subject])}
+    </div>
+  </div>
+`;
   }
 }
 function renderTestFolders(tests){
   let html = "";
-  let i = 0;
 
   for(const testId in tests){
     const testBoxId = `test_${testId}`;
 
     html += `
       <div style="margin-left:24px">
-        <button class="folder-btn" onclick="toggleFolder('${testBoxId}', this)">
+        <button class="folder-btn test-btn"
+                onclick="toggleTest('${testBoxId}', this)">
           📄 ${testId}
           <span>▶</span>
         </button>
 
-        <div class="folder-content" id="${testBoxId}">
+        <div class="folder-content test-folder" id="${testBoxId}">
           ${renderResultsByTest(tests[testId])}
         </div>
       </div>
     `;
   }
-
   return html;
 }
 
-
-function selectTest(id,btn){
-  currentTestId=id;
-  document.querySelectorAll(".test-btn").forEach(b=>b.classList.remove("active"));
-  btn.classList.add("active");
-  renderAdminTable();
-}
-function toggleFolder(id, btn){
-  const current = document.getElementById(id);
-  const isOpen = current.style.display === "block";
-
-  // 1️⃣ Shu darajadagi barcha papkalarni yopish
-  const parent = btn.closest(".qitem") || btn.parentElement;
-  const allContents = parent.querySelectorAll(".folder-content");
-  const allButtons = parent.querySelectorAll(".folder-btn span");
-
-  allContents.forEach(el => el.style.display = "none");
-  allButtons.forEach(sp => sp.innerText = "▶");
-
-  // 2️⃣ Agar yopiq bo‘lsa — ochamiz
-  if(!isOpen){
-    current.style.display = "block";
-    btn.querySelector("span").innerText = "▼";
-  }
-}
 function renderResultsByTest(list){
   return `
     <table class="table">
@@ -408,10 +383,56 @@ function openDetail(r){
   });
   detailModal.style.display="flex";
 }
+// 📁 FAN — faqat bittasi ochiladi
+function toggleSubject(id, btn){
+  document.querySelectorAll(".subject-folder").forEach(el=>{
+    el.style.display = "none";
+  });
+  document.querySelectorAll(".subject-btn span").forEach(s=>{
+    s.innerText = "▶";
+  });
+
+  const el = document.getElementById(id);
+  const arrow = btn.querySelector("span");
+
+  if(el.style.display === "block"){
+    el.style.display = "none";
+    arrow.innerText = "▶";
+  }else{
+    el.style.display = "block";
+    arrow.innerText = "▼";
+  }
+}
+
+// 📄 TEST — fan ichida faqat bittasi
+function toggleTest(id, btn){
+  const parent = btn.closest(".subject-folder");
+
+  parent.querySelectorAll(".test-folder").forEach(el=>{
+    el.style.display = "none";
+  });
+  parent.querySelectorAll(".test-btn span").forEach(s=>{
+    s.innerText = "▶";
+  });
+
+  const el = document.getElementById(id);
+  const arrow = btn.querySelector("span");
+
+  if(el.style.display === "block"){
+    el.style.display = "none";
+    arrow.innerText = "▶";
+  }else{
+    el.style.display = "block";
+    arrow.innerText = "▼";
+  }
+}
+
+
 </script>
 
 </body>
 </html>
+
 
 
 
