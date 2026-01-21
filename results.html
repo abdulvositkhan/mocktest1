@@ -206,6 +206,7 @@ const rows=document.getElementById("rows");
 const summary=document.getElementById("summary");
 const modalDetails=document.getElementById("modalDetails");
 
+  let testSubjects = {}; // testId -> subject
 let allResults=[];
 let currentTestId=null;
 
@@ -214,9 +215,50 @@ db.collection("results")
   .get()
   .then(snap=>{
     snap.forEach(d=>allResults.push(d.data()));
-    if(viewer==="admin") renderTests();
+   if(viewer==="admin") renderAdminBySubject();
     else renderStudent();
   });
+db.collection("tests").get().then(snap=>{
+  snap.forEach(doc=>{
+    const t = doc.data();
+    if(t.testId && t.subject){
+      testSubjects[t.testId] = t.subject;
+    }
+  });
+});
+function renderAdminBySubject(){
+  testList.style.display = "none";
+  summary.innerHTML = "";
+  rows.innerHTML = "";
+
+  const groups = {};
+
+  allResults.forEach(r=>{
+    const subject = testSubjects[r.testId] || "Boshqa";
+    if(!groups[subject]) groups[subject] = [];
+    groups[subject].push(r);
+  });
+
+  let i = 0;
+  for(const subject in groups){
+    const panelId = `sub_${i++}`;
+
+    rows.innerHTML += `
+      <tr>
+        <td colspan="6">
+          <button class="folder-btn" onclick="toggleFolder('${panelId}', this)">
+            📁 ${subject}
+            <span>▶</span>
+          </button>
+
+          <div class="folder-content" id="${panelId}">
+            ${renderResultsByTest(groups[subject])}
+          </div>
+        </td>
+      </tr>
+    `;
+  }
+}
 
 /* ADMIN */
 function renderTests(){
@@ -237,28 +279,47 @@ function selectTest(id,btn){
   btn.classList.add("active");
   renderAdminTable();
 }
+function toggleFolder(id, btn){
+  const el = document.getElementById(id);
+  const arrow = btn.querySelector("span");
 
-function renderAdminTable(){
-  rows.innerHTML="";
-  summary.innerHTML="";
-  const list=allResults.filter(r=>r.testId===currentTestId);
+  if(el.style.display === "block"){
+    el.style.display = "none";
+    arrow.innerText = "▶";
+  }else{
+    el.style.display = "block";
+    arrow.innerText = "▼";
+  }
+}
 
-  list.forEach((r,i)=>{
-    let cls="red";
-    if(r.ball>=80) cls="blue";
-    else if(r.ball>=70) cls="yellow";
-    else if(r.ball>=60) cls="orange";
+function renderResultsByTest(list){
+  return `
+    <table class="table">
+      <tbody>
+        ${list.map((r,i)=>{
+          let cls="red";
+          if(r.ball>=80) cls="blue";
+          else if(r.ball>=70) cls="yellow";
+          else if(r.ball>=60) cls="orange";
 
-    rows.innerHTML+=`
-      <tr>
-        <td>${i+1}</td>
-        <td>${r.ism}</td>
-        <td>${r.familiya}</td>
-        <td><span class="score ${cls}">${r.ball} ball</span></td>
-        <td>${r.time}</td>
-        <td><button onclick='openDetail(${JSON.stringify(r)})'>Ko‘rish</button></td>
-      </tr>`;
-  });
+          return `
+            <tr>
+              <td>${i+1}</td>
+              <td>${r.ism}</td>
+              <td>${r.familiya}</td>
+              <td><span class="score ${cls}">${r.ball} ball</span></td>
+              <td>${r.time}</td>
+              <td>
+                <button onclick='openDetail(${JSON.stringify(r)})'>
+                  Ko‘rish
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join("")}
+      </tbody>
+    </table>
+  `;
 }
 
 /* STUDENT */
@@ -309,5 +370,6 @@ function openDetail(r){
 
 </body>
 </html>
+
 
 
