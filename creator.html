@@ -160,23 +160,6 @@ sessionStorage.setItem("viewer","admin");
 <h1>🛠 Admin Panel — Test yaratish</h1>
 
 <input id="testId" placeholder="Test ID (masalan: MAT2025)">
-<select id="subject">
-  <option value="">📁 Fan tanlang</option>
-  <option>Boshlang'ich ta'lim</option>
-  <option>Ingliz tili</option>
-  <option>Ona tili</option>
-  <option>Rus tili</option>
-  <option>Kimyo</option>
-  <option>Biologiya</option>
-  <option>Geografiya</option>
-  <option>Psixologiya</option>
-  <option>Fizika</option>
-  <option>Matematika</option>
-  <option>Informatika</option>
-  <option>Tarix</option>
-  <option>Huquq</option>
-  <option>Tarbiya</option>
-</select>
 
 <div class="row">
   <input type="date" id="date" placeholder="Boshlanish sanasi">
@@ -393,11 +376,6 @@ function editQ(i){
 
 /* SAVE TEST */
 async function saveTest(){
- if(!subject.value){
-  showModal("Xatolik","Fan tanlanmagan");
-  return;
-}
-
   if(!testId.value){
     showModal("Xatolik","Test ID kiritilmagan");
     return;
@@ -422,8 +400,6 @@ if(new Date(endDate.value) < new Date(date.value)){
 }
 
 await ref.set({
-  testId: testId.value,
-  subject: subject.value,   // 👈 PAPKA / FAN
   startDate: date.value,
   endDate: endDate.value,
   start: start.value,
@@ -434,45 +410,25 @@ await ref.set({
 });
 
 
-
   showModal("Muvaffaqiyat","Test saqlandi. Version: "+version);
   loadSavedTests();
 }
 
 /* LOAD TESTS */
 async function loadSavedTests(){
-  savedTests.innerHTML = "";
-
-  const snap = await db.collection("tests").get();
-  const groups = {};
-
-  snap.forEach(doc=>{
-    const t = doc.data();
-    const subject = t.subject || "Boshqa";
-
-    if(!groups[subject]) groups[subject] = [];
-    groups[subject].push({ id: doc.id, ...t });
-  });
-
-  Object.keys(groups).forEach(subject=>{
-    savedTests.innerHTML += `
+  savedTests.innerHTML="";
+  const snap=await db.collection("tests").get();
+  snap.forEach(d=>{
+    savedTests.innerHTML+=`
       <div class="qitem">
-        <h3>📁 ${subject}</h3>
-
-        ${groups[subject].map(t=>`
-          <div style="margin-top:10px">
-            <b>${t.testId}</b>
-            <span class="badge">v${t.version || 1}</span>
-            <button class="blue" onclick="loadTest('${t.testId}')">✏️</button>
-            <button class="red" onclick="deleteTest('${t.testId}')">🗑</button>
-          </div>
-        `).join("")}
-
-      </div>
-    `;
+        <b>${d.id}</b>
+        <span class="badge">v${d.data().version||1}</span>
+        <button class="blue" onclick="loadTest('${d.id}')">✏️</button>
+     <button class="red" onclick="deleteTest('${d.id}')">🗑 O‘chirish</button>
+      </div>`;
   });
 }
-
+  
 async function deleteTest(testId){
   const ok = confirm(
     "Diqqat!\n\n" +
@@ -555,8 +511,6 @@ loadSavedTests();
 
 </body>
 </html>
-
-
 
 
 
