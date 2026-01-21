@@ -159,8 +159,9 @@ th{background:#f1f5f9;font-weight:900}
   margin:12px 0;
 }
 
+
 .folder-content{
-  display:none;
+  display:none;   /* 👈 MUHIM */
   margin-top:10px;
   padding-left:10px;
 }
@@ -254,18 +255,20 @@ function renderAdminBySubject(){
   testList.style.display = "none";
   summary.innerHTML = "";
 
-  const subjectGroups = {};
+  const subjects = {};
 
-  // 1️⃣ Fan bo‘yicha
+  // 1️⃣ Fan → Test ID → Results
   allResults.forEach(r=>{
     const subject = testSubjects[r.testId] || "Boshqa";
-    if(!subjectGroups[subject]) subjectGroups[subject] = {};
-    if(!subjectGroups[subject][r.testId]) subjectGroups[subject][r.testId] = [];
-    subjectGroups[subject][r.testId].push(r);
+
+    if(!subjects[subject]) subjects[subject] = {};
+    if(!subjects[subject][r.testId]) subjects[subject][r.testId] = [];
+
+    subjects[subject][r.testId].push(r);
   });
 
   let s = 0;
-  for(const subject in subjectGroups){
+  for(const subject in subjects){
     const subjectId = `subject_${s++}`;
 
     rows.innerHTML += `
@@ -276,12 +279,36 @@ function renderAdminBySubject(){
         </button>
 
         <div class="folder-content" id="${subjectId}">
-          ${renderTestsInSubject(subjectGroups[subject])}
+          ${renderTestFolders(subjects[subject])}
         </div>
       </div>
     `;
   }
 }
+function renderTestFolders(tests){
+  let html = "";
+  let i = 0;
+
+  for(const testId in tests){
+    const testBoxId = `test_${i++}`;
+
+    html += `
+      <div style="margin-left:24px">
+        <button class="folder-btn" onclick="toggleFolder('${testBoxId}', this)">
+          📄 ${testId}
+          <span>▶</span>
+        </button>
+
+        <div class="folder-content" id="${testBoxId}">
+          ${renderResultsByTest(tests[testId])}
+        </div>
+      </div>
+    `;
+  }
+
+  return html;
+}
+
 
 
 function renderTestsInSubject(tests){
@@ -405,6 +432,7 @@ function openDetail(r){
 
 </body>
 </html>
+
 
 
 
