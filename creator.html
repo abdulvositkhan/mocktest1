@@ -269,48 +269,29 @@ select:disabled{
   padding-left:10px;
 }
 
-/* 🧩 HAR BIR TEST — BITTA CHIZIQ */
 .test-row{
   display:flex;
   align-items:center;
-  gap:14px;
-  padding:10px 0;
-  border-bottom:1px dashed #e5e7eb;
-  flex-wrap:nowrap;
-}
-
-/* Chapdagi ma’lumotlar ham bir chiziqda */
-.test-info{
-  display:flex;
-  align-items:center;
   gap:10px;
-  flex-wrap:wrap; /* joy kam bo‘lsa pastga tushishi mumkin */
+  margin-top:10px;
 }
 
-/* Sana-vaqt yozuvi */
-.test-dates{
+.status{
+  font-weight:800;
   font-size:13px;
-  color:#6b7280;
-  font-weight:600;
+  padding:4px 10px;
+  border-radius:999px;
   white-space:nowrap;
 }
 
-/* Tugmalar yonma-yon */
-.test-actions{
-  display:flex;
-  gap:10px;
-  margin-left:auto;
+.status.active{
+  background:#dcfce7;
+  color:#166534;
 }
-  
-@media (max-width: 768px){
-  .test-row{
-    flex-wrap:wrap;
-  }
 
-  .test-actions{
-    width:100%;
-    justify-content:flex-end;
-  }
+.status.ended{
+  background:#fee2e2;
+  color:#991b1b;
 }
 
 </style>
@@ -635,6 +616,16 @@ render();
 
 }
 
+  function getTestStatus(t){
+  if(!t.endDate || !t.end) return "unknown";
+
+  const now = new Date();
+
+  const end = new Date(`${t.endDate}T${t.end}`);
+
+  return now <= end ? "active" : "ended";
+}
+
 /* LOAD TESTS */
 async function loadSavedTests(){
   savedTests.innerHTML = "";
@@ -656,34 +647,46 @@ Object.keys(groups).forEach((subject, i)=>{
   savedTests.innerHTML += `
     <div class="qitem">
 
-      <!-- PAPKA TUGMASI -->
       <button class="folder-btn" onclick="toggleFolder('${panelId}')">
         📁 ${subject}
         <span class="arrow">▶</span>
       </button>
 
-      <!-- ICHKI TESTLAR -->
       <div class="folder-content" id="${panelId}">
-        ${groups[subject].map(t=>`
-       <div class="test-row">
-  <div class="test-info">
-    <b>${t.testId}</b>
-    <span class="badge">v${t.version || 1}</span>
+        ${groups[subject].map(t=>{
+          const status = getTestStatus(t);
 
-    <span class="test-dates">
-      📅 ${t.startDate || "-"} ${t.start || ""}
-      → ⏰ ${t.endDate || "-"} ${t.end || ""}
-    </span>
-  </div>
+          return `
+            <div class="test-row">
+              <span class="status ${status}">
+                ${status === "active" ? "🟢 Active" : "🔴 Tugagan"}
+              </span>
 
-  <div class="test-actions">
-    <button class="blue">✏️ Tahrirlash</button>
-    <button class="red">🗑 O‘chirish</button>
-  </div>
-</div>
+              <b>${t.testId}</b>
+              <span class="badge">v${t.version || 1}</span>
 
+              <span class="test-dates">
+                📅 ${t.startDate} ${t.start}
+                → ⏰ ${t.endDate} ${t.end}
+              </span>
+
+              <div class="test-actions">
+                <button class="blue" onclick="loadTest('${t.id}')">
+                  ✏️ Tahrirlash
+                </button>
+                <button class="red" onclick="deleteTest('${t.id}')">
+                  🗑 O‘chirish
+                </button>
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+
+    </div>
   `;
 });
+
 }
 
   function toggleFolder(id){
