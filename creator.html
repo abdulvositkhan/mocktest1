@@ -507,8 +507,9 @@ async function loadSavedTests(){
           <div style="margin-top:10px">
             <b>${t.testId}</b>
             <span class="badge">v${t.version || 1}</span>
-            <button class="blue" onclick="loadTest('${t.testId}')">✏️</button>
-            <button class="red" onclick="deleteTest('${t.testId}')">🗑</button>
+            <button class="blue" onclick="loadTest('${t.id}')">✏️</button>
+           <button class="red" onclick="deleteTest('${t.id}')">🗑</button>
+
           </div>
         `).join("")}
 
@@ -599,6 +600,7 @@ loadSavedTests();
 
 </body>
 </html>
+
 
 
 
