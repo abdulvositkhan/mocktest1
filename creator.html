@@ -563,19 +563,21 @@ async function loadTest(id){
   const d = await db.collection("tests").doc(id).get();
   const t = d.data();
 
-  testId.value = id;
+  testId.value = t.testId || id;
+  subject.value = t.subject || ""; // ✅ MUHIM QATOR
   date.value = t.startDate || "";
-endDate.value = t.endDate || "";
+  endDate.value = t.endDate || "";
   start.value = t.start || "";
   end.value = t.end || "";
   duration.value = t.duration || "";
   questions = t.questions || [];
 
   render();
-  // ✅ TESTNI TAHRIRLASH BOSILGANDA YUQORIGA O‘TSIN
+
   document.getElementById("editSection")
     .scrollIntoView({ behavior:"smooth", block:"start" });
 }
+
 /* EXCEL */
 function loadExcel(){
   const f=excelFile.files[0];
@@ -606,6 +608,7 @@ loadSavedTests();
 
 </body>
 </html>
+
 
 
 
