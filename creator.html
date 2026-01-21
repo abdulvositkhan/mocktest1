@@ -269,13 +269,49 @@ select:disabled{
   padding-left:10px;
 }
 
+/* 🧩 HAR BIR TEST — BITTA CHIZIQ */
 .test-row{
   display:flex;
   align-items:center;
-  gap:10px;
-  margin-top:10px;
+  gap:14px;
+  padding:10px 0;
+  border-bottom:1px dashed #e5e7eb;
+  flex-wrap:nowrap;
 }
 
+/* Chapdagi ma’lumotlar ham bir chiziqda */
+.test-info{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap; /* joy kam bo‘lsa pastga tushishi mumkin */
+}
+
+/* Sana-vaqt yozuvi */
+.test-dates{
+  font-size:13px;
+  color:#6b7280;
+  font-weight:600;
+  white-space:nowrap;
+}
+
+/* Tugmalar yonma-yon */
+.test-actions{
+  display:flex;
+  gap:10px;
+  margin-left:auto;
+}
+  
+@media (max-width: 768px){
+  .test-row{
+    flex-wrap:wrap;
+  }
+
+  .test-actions{
+    width:100%;
+    justify-content:flex-end;
+  }
+}
 
 </style>
 </head>
@@ -629,16 +665,23 @@ Object.keys(groups).forEach((subject, i)=>{
       <!-- ICHKI TESTLAR -->
       <div class="folder-content" id="${panelId}">
         ${groups[subject].map(t=>`
-          <div class="test-row">
-            <b>${t.testId}</b>
-            <span class="badge">v${t.version || 1}</span>
-            <button class="blue" onclick="loadTest('${t.id}')">✏️</button>
-            <button class="red" onclick="deleteTest('${t.id}')">🗑</button>
-          </div>
-        `).join("")}
-      </div>
+       <div class="test-row">
+  <div class="test-info">
+    <b>${t.testId}</b>
+    <span class="badge">v${t.version || 1}</span>
 
-    </div>
+    <span class="test-dates">
+      📅 ${t.startDate || "-"} ${t.start || ""}
+      → ⏰ ${t.endDate || "-"} ${t.end || ""}
+    </span>
+  </div>
+
+  <div class="test-actions">
+    <button class="blue">✏️ Tahrirlash</button>
+    <button class="red">🗑 O‘chirish</button>
+  </div>
+</div>
+
   `;
 });
 }
@@ -740,6 +783,7 @@ loadSavedTests();
 
 </body>
 </html>
+
 
 
 
