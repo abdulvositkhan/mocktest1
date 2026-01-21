@@ -249,6 +249,32 @@ select:disabled{
   color: #6b7280;
 }
 
+.folder-btn{
+  width:100%;
+  text-align:left;
+  background:#f8fafc;
+  border:2px solid #e5e7eb;
+  border-radius:14px;
+  padding:14px 18px;
+  font-weight:900;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  cursor:pointer;
+}
+
+.folder-content{
+  display:none;
+  margin-top:12px;
+  padding-left:10px;
+}
+
+.test-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:10px;
+}
 
 
 </style>
@@ -588,24 +614,46 @@ async function loadSavedTests(){
     groups[subject].push({ id: doc.id, ...t });
   });
 
-  Object.keys(groups).forEach(subject=>{
-    savedTests.innerHTML += `
-      <div class="qitem">
-        <h3>📁 ${subject}</h3>
+Object.keys(groups).forEach((subject, i)=>{
+  const panelId = `panel_${i}`;
 
+  savedTests.innerHTML += `
+    <div class="qitem">
+
+      <!-- PAPKA TUGMASI -->
+      <button class="folder-btn" onclick="toggleFolder('${panelId}')">
+        📁 ${subject}
+        <span class="arrow">▶</span>
+      </button>
+
+      <!-- ICHKI TESTLAR -->
+      <div class="folder-content" id="${panelId}">
         ${groups[subject].map(t=>`
-          <div style="margin-top:10px">
+          <div class="test-row">
             <b>${t.testId}</b>
             <span class="badge">v${t.version || 1}</span>
             <button class="blue" onclick="loadTest('${t.id}')">✏️</button>
-           <button class="red" onclick="deleteTest('${t.id}')">🗑</button>
-
+            <button class="red" onclick="deleteTest('${t.id}')">🗑</button>
           </div>
         `).join("")}
-
       </div>
-    `;
-  });
+
+    </div>
+  `;
+});
+}
+
+  function toggleFolder(id){
+  const el = document.getElementById(id);
+  const arrow = el.previousElementSibling.querySelector(".arrow");
+
+  if(el.style.display === "block"){
+    el.style.display = "none";
+    arrow.innerText = "▶";
+  }else{
+    el.style.display = "block";
+    arrow.innerText = "▼";
+  }
 }
 
 async function deleteTest(testId){
@@ -692,6 +740,7 @@ loadSavedTests();
 
 </body>
 </html>
+
 
 
 
