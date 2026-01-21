@@ -208,42 +208,25 @@ button:hover{transform:translateY(-1px)}
     grid-template-columns: 1fr 1fr;
   }
 }
-/* Sana, vaqt, davomiylik kataklari */
-.row input[type="date"],
-.row input[type="time"],
-.row input[type="number"]{
-  background: #ecfdf5;        /* och yashil */
-  border-color: #34d399;      /* yashil border */
-}
-
-/* Bosilganda (focus) */
-.row input[type="date"]:focus,
-.row input[type="time"]:focus,
-.row input[type="number"]:focus{
-  background: #d1fae5;
-  border-color: #10b981;
-  box-shadow: 0 0 0 3px rgba(16,185,129,.25);
-}
-/* 🔹 Oddiy holat */
-input,
-textarea,
-select{
-  background: #ecfdf5;        /* och yashil */
+/* 🔹 Oddiy holat — och yashil */
+.test-meta input,
+.test-meta select{
+  background: #ecfdf5;
   border: 2px solid #34d399;
   transition: all .15s ease;
 }
 
-/* 🔥 Bosilganda (focus) — AJRALIB TURSIN */
-input:focus,
-textarea:focus,
-select:focus{
-  background: #bbf7d0;        /* to‘qroq yashil */
-  border-color: #059669;      /* kuchli yashil */
+/* 🔥 Bosilganda (focus) — TO‘Q SARIQ / TO‘Q MALLA */
+.test-meta input:focus,
+.test-meta select:focus{
+  background: #ecfdf5;              /* ichi yashil qoladi */
+  border-color: #c2410c;            /* to‘q malla */
   box-shadow:
-    0 0 0 3px rgba(5,150,105,.25),
-    0 0 0 6px rgba(5,150,105,.15);
+    0 0 0 3px rgba(194,65,12,.35),
+    0 0 0 6px rgba(234,88,12,.25);
   outline: none;
 }
+
 
 </style>
 </head>
@@ -686,6 +669,7 @@ loadSavedTests();
 
 </body>
 </html>
+
 
 
 
