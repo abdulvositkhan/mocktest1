@@ -260,8 +260,8 @@ const db = firebase.firestore();
 
 
 const testId=sessionStorage.getItem("currentTestId");
-  const progressKey = `progress_${testId}_${deviceId}_${user.ism}_${user.familiya}`;
 const user=JSON.parse(sessionStorage.getItem("currentUser")||"{}");
+  const progressKey = `progress_${testId}_${user.ism}_${user.familiya}`;
 if(!testId||!user.ism) location.href="index.html";
 
 let deviceId=localStorage.getItem("deviceId");
@@ -276,38 +276,43 @@ function saveProgress(){
   localStorage.setItem(progressKey, JSON.stringify({
     testId,
     deviceId,
-    ism: user.ism,
-    familiya: user.familiya,
+    userKey: user.ism + "_" + user.familiya,
     index,
     answers,
     timeLeft,
-    version: test.version || 1,
-    expiresAt: Date.now() + timeLeft * 1000 // ⏰ MUHIM
+    version: test.version || 1
   }));
 }
 
 function loadProgress(){
-const progressKey = `progress_${testId}_${deviceId}_${user.ism}_${user.familiya}`;
+  const raw = localStorage.getItem(progressKey);
   if(!raw) return false;
 
   const p = JSON.parse(raw);
 
-  // ❌ Boshqa qurilma yoki boshqa test versiyasi
-  if(p.deviceId !== deviceId || p.version !== (test.version || 1)){
-    localStorage.removeItem("progress_" + testId);
+  // boshqa foydalanuvchi bo‘lsa
+  if(p.userKey !== user.ism + "_" + user.familiya){
+    localStorage.removeItem(progressKey);
     return false;
   }
 
-  // ❌ Vaqt tugagan bo‘lsa — eski progressni O‘CHIRAMIZ
-  if(p.timeLeft <= 0){
-    localStorage.removeItem("progress_" + testId);
+  // boshqa qurilma bo‘lsa
+  if(p.deviceId !== deviceId){
+    localStorage.removeItem(progressKey);
     return false;
   }
-// ❌ Test vaqti real tugagan bo‘lsa
-if(Date.now() > p.expiresAt){
-  localStorage.removeItem(progressKey);
-  return false;
-}
+
+  // test versiyasi o‘zgargan bo‘lsa
+  if(p.version !== (test.version || 1)){
+    localStorage.removeItem(progressKey);
+    return false;
+  }
+
+  // vaqt tugagan bo‘lsa
+  if(p.timeLeft <= 0){
+    localStorage.removeItem(progressKey);
+    return false;
+  }
 
   index = p.index || 0;
   answers = p.answers || {};
@@ -384,8 +389,7 @@ function prev(){if(index>0){index--;saveProgress();render();}}
 
 function finish(){
   clearInterval(interval);
-  const progressKey = `progress_${testId}_${deviceId}_${user.ism}_${user.familiya}`;
-  localStorage.removeItem("progress_"+testId);
+ localStorage.removeItem(progressKey);
 
   let correct=0;
   const full=[];
@@ -517,6 +521,26 @@ function showClosed(r){
 
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
