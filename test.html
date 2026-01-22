@@ -251,15 +251,30 @@ function saveProgress(){
 }
 
 function loadProgress(){
-  const raw=localStorage.getItem("progress_"+testId);
+  const raw = localStorage.getItem("progress_" + testId);
   if(!raw) return false;
-  const p=JSON.parse(raw);
-  if(p.deviceId!==deviceId||p.version!==(test.version||1)) return false;
-  index=p.index||0;
-  answers=p.answers||{};
-  timeLeft=p.timeLeft||timeLeft;
+
+  const p = JSON.parse(raw);
+
+  // ❌ Boshqa qurilma yoki boshqa test versiyasi
+  if(p.deviceId !== deviceId || p.version !== (test.version || 1)){
+    localStorage.removeItem("progress_" + testId);
+    return false;
+  }
+
+  // ❌ Vaqt tugagan bo‘lsa — eski progressni O‘CHIRAMIZ
+  if(p.timeLeft <= 0){
+    localStorage.removeItem("progress_" + testId);
+    return false;
+  }
+
+  index = p.index || 0;
+  answers = p.answers || {};
+  timeLeft = p.timeLeft;
+
   return true;
 }
+
 
 db.collection("tests").doc(testId).get().then(async d=>{
   test=d.data();
@@ -458,6 +473,7 @@ function showClosed(r){
 
 </body>
 </html>
+
 
 
 
