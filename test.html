@@ -260,6 +260,7 @@ const db = firebase.firestore();
 
 
 const testId=sessionStorage.getItem("currentTestId");
+  const progressKey = `progress_${testId}_${deviceId}_${user.ism}_${user.familiya}`;
 const user=JSON.parse(sessionStorage.getItem("currentUser")||"{}");
 if(!testId||!user.ism) location.href="index.html";
 
@@ -272,13 +273,21 @@ if(!deviceId){
 let test,index=0,answers={},timeLeft=0,finalResult=null,interval=null;
 
 function saveProgress(){
-  localStorage.setItem("progress_"+testId,JSON.stringify({
-    testId,deviceId,index,answers,timeLeft,version:test.version||1
+  localStorage.setItem(progressKey, JSON.stringify({
+    testId,
+    deviceId,
+    ism: user.ism,
+    familiya: user.familiya,
+    index,
+    answers,
+    timeLeft,
+    version: test.version || 1,
+    expiresAt: Date.now() + timeLeft * 1000 // ⏰ MUHIM
   }));
 }
 
 function loadProgress(){
-  const raw = localStorage.getItem("progress_" + testId);
+const progressKey = `progress_${testId}_${deviceId}_${user.ism}_${user.familiya}`;
   if(!raw) return false;
 
   const p = JSON.parse(raw);
@@ -294,6 +303,11 @@ function loadProgress(){
     localStorage.removeItem("progress_" + testId);
     return false;
   }
+// ❌ Test vaqti real tugagan bo‘lsa
+if(Date.now() > p.expiresAt){
+  localStorage.removeItem(progressKey);
+  return false;
+}
 
   index = p.index || 0;
   answers = p.answers || {};
@@ -370,6 +384,7 @@ function prev(){if(index>0){index--;saveProgress();render();}}
 
 function finish(){
   clearInterval(interval);
+  const progressKey = `progress_${testId}_${deviceId}_${user.ism}_${user.familiya}`;
   localStorage.removeItem("progress_"+testId);
 
   let correct=0;
@@ -502,6 +517,7 @@ function showClosed(r){
 
 </body>
 </html>
+
 
 
 
