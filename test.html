@@ -287,38 +287,22 @@ function saveProgress(){
   );
 }
 
+
 function loadProgress(){
-  const key = "progress_" + testId + "_" + deviceId;
-  const raw = localStorage.getItem(key);
+const progressKey = "progress_" + testId + "_" + deviceId;
   if(!raw) return false;
 
   const p = JSON.parse(raw);
 
-  // ❌ BOSHQA USER
-  if(p.ism !== user.ism || p.familiya !== user.familiya){
-    localStorage.removeItem(key);
+  // ❌ Boshqa qurilma yoki boshqa test versiyasi
+  if(p.deviceId !== deviceId || p.version !== (test.version || 1)){
+    localStorage.removeItem("progress_" + testId);
     return false;
   }
 
-  // ❌ BOSHQA VERSIYA
-  if(p.version !== (test.version || 1)){
-    localStorage.removeItem(key);
-    return false;
-  }
-
-  // ❌ TEST VAQTI TEKSHIRISH
-  const now = Date.now();
-  const startAt = new Date(`${test.startDate}T${test.start}`).getTime();
-  const endAt   = new Date(`${test.endDate}T${test.end}`).getTime();
-
-  if(now < startAt || now > endAt){
-    localStorage.removeItem(key);
-    return false;
-  }
-
-  // ❌ VAQT TUGAGAN
+  // ❌ Vaqt tugagan bo‘lsa — eski progressni O‘CHIRAMIZ
   if(p.timeLeft <= 0){
-    localStorage.removeItem(key);
+    localStorage.removeItem("progress_" + testId);
     return false;
   }
 
@@ -328,6 +312,29 @@ function loadProgress(){
 
   return true;
 }
+
+
+db.collection("tests").doc(testId).get().then(async d=>{
+  test=d.data();
+  const ver=test.version||1;
+
+  const snap=await db.collection("results")
+    .where("testId","==",testId)
+    .where("ism","==",user.ism)
+    .where("familiya","==",user.familiya)
+    .where("deviceId","==",deviceId)
+    .limit(1).get();
+
+  if(!snap.empty && snap.docs[0].data().testVersion===ver){
+    showClosed(snap.docs[0].data());
+    return;
+  }
+
+  timeLeft=Number(test.duration||60)*60;
+  loadProgress();
+  startTimer();
+  render();
+});
 
 function startTimer(){
   interval=setInterval(()=>{
@@ -374,7 +381,7 @@ function prev(){if(index>0){index--;saveProgress();render();}}
 
 function finish(){
   clearInterval(interval);
-localStorage.removeItem("progress_" + testId + "_" + deviceId);
+  const progressKey = "progress_" + testId + "_" + deviceId;
 
   let correct=0;
   const full=[];
@@ -500,37 +507,10 @@ function showClosed(r){
   `;
 }
 
-
-
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
