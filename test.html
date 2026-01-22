@@ -272,26 +272,53 @@ if(!deviceId){
 let test,index=0,answers={},timeLeft=0,finalResult=null,interval=null;
 
 function saveProgress(){
-  localStorage.setItem("progress_"+testId,JSON.stringify({
-    testId,deviceId,index,answers,timeLeft,version:test.version||1
-  }));
+  localStorage.setItem(
+    "progress_" + testId + "_" + deviceId,
+    JSON.stringify({
+      testId,
+      deviceId,
+      ism: user.ism,
+      familiya: user.familiya,
+      index,
+      answers,
+      timeLeft,
+      version: test.version || 1
+    })
+  );
 }
 
 function loadProgress(){
-  const raw = localStorage.getItem("progress_" + testId);
+  const key = "progress_" + testId + "_" + deviceId;
+  const raw = localStorage.getItem(key);
   if(!raw) return false;
 
   const p = JSON.parse(raw);
 
-  // ❌ Boshqa qurilma yoki boshqa test versiyasi
-  if(p.deviceId !== deviceId || p.version !== (test.version || 1)){
-    localStorage.removeItem("progress_" + testId);
+  // ❌ BOSHQA USER
+  if(p.ism !== user.ism || p.familiya !== user.familiya){
+    localStorage.removeItem(key);
     return false;
   }
 
-  // ❌ Vaqt tugagan bo‘lsa — eski progressni O‘CHIRAMIZ
+  // ❌ BOSHQA VERSIYA
+  if(p.version !== (test.version || 1)){
+    localStorage.removeItem(key);
+    return false;
+  }
+
+  // ❌ TEST VAQTI TEKSHIRISH
+  const now = Date.now();
+  const startAt = new Date(`${test.startDate}T${test.start}`).getTime();
+  const endAt   = new Date(`${test.endDate}T${test.end}`).getTime();
+
+  if(now < startAt || now > endAt){
+    localStorage.removeItem(key);
+    return false;
+  }
+
+  // ❌ VAQT TUGAGAN
   if(p.timeLeft <= 0){
-    localStorage.removeItem("progress_" + testId);
+    localStorage.removeItem(key);
     return false;
   }
 
@@ -301,29 +328,6 @@ function loadProgress(){
 
   return true;
 }
-
-
-db.collection("tests").doc(testId).get().then(async d=>{
-  test=d.data();
-  const ver=test.version||1;
-
-  const snap=await db.collection("results")
-    .where("testId","==",testId)
-    .where("ism","==",user.ism)
-    .where("familiya","==",user.familiya)
-    .where("deviceId","==",deviceId)
-    .limit(1).get();
-
-  if(!snap.empty && snap.docs[0].data().testVersion===ver){
-    showClosed(snap.docs[0].data());
-    return;
-  }
-
-  timeLeft=Number(test.duration||60)*60;
-  loadProgress();
-  startTimer();
-  render();
-});
 
 function startTimer(){
   interval=setInterval(()=>{
@@ -370,7 +374,7 @@ function prev(){if(index>0){index--;saveProgress();render();}}
 
 function finish(){
   clearInterval(interval);
-  localStorage.removeItem("progress_"+testId);
+localStorage.removeItem("progress_" + testId + "_" + deviceId);
 
   let correct=0;
   const full=[];
@@ -502,6 +506,7 @@ function showClosed(r){
 
 </body>
 </html>
+
 
 
 
