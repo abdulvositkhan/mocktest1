@@ -125,35 +125,26 @@ async function start(){
   const test = doc.data();
 
   /* ⏰ TIME CHECK */
-  const now = new Date();
+   const now = Date.now();
 
-  if(test.date){
-    const today = new Date(test.date);
-    if(now.toDateString() !== today.toDateString()){
-      error.innerText = "Test bugun uchun faol emas";
-      return;
-    }
+  if(!test.startDate || !test.start || !test.endDate || !test.end){
+    error.innerText = "Test vaqti noto‘g‘ri sozlangan";
+    return;
   }
 
-  if(test.start && test.end){
-    const [sh,sm] = test.start.split(":");
-    const [eh,em] = test.end.split(":");
+  const startAt = new Date(`${test.startDate}T${test.start}`).getTime();
+  const endAt   = new Date(`${test.endDate}T${test.end}`).getTime();
 
-    const start = new Date();
-    start.setHours(sh,sm,0,0);
-
-    const end = new Date();
-    end.setHours(eh,em,0,0);
-
-    if(now < start){
-      error.innerText = "Test hali boshlanmagan";
-      return;
-    }
-    if(now > end){
-      error.innerText = "Test vaqti tugagan";
-      return;
-    }
+  if(now < startAt){
+    error.innerText = "Test hali boshlanmagan";
+    return;
   }
+
+  if(now > endAt){
+    error.innerText = "Test vaqti tugagan";
+    return;
+  }
+
 
   /* 👤 USER INFO (SESSION) */
   sessionStorage.setItem("currentUser", JSON.stringify({ism,familiya}));
@@ -165,6 +156,7 @@ async function start(){
 
 </body>
 </html>
+
 
 
 
