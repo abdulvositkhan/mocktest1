@@ -202,7 +202,30 @@ button{
   font-size: 20px;
   pointer-events: none;
 }
+/* 🔠 Variant harfi (A B C D) */
+.opt-label{
+  min-width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e0e7ff;
+  color: #1e3a8a;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
 
+/* Tanlanganda harf ham o‘zgaradi */
+.option.selected .opt-label{
+  background: #4f46e5;
+  color: #fff;
+}
+
+.opt-text{
+  line-height: 1.5;
+}
 
 </style>
 </head>
@@ -334,9 +357,11 @@ order.forEach(k=>{
   if(!q.options[k]) return;
 
   html+=`
-    <div class="option ${answers[index]===k?"selected":""}" onclick="choose('${k}')">
-      ${k}) ${q.options[k]}
-    </div>`;
+  <div class="option ${answers[index]===k?"selected":""}" onclick="choose('${k}')">
+    <span class="opt-label">${k}</span>
+    <span class="opt-text">${q.options[k]}</span>
+  </div>`;
+
 });
 
   html+=`
@@ -436,7 +461,7 @@ function showAnalysis(){
     // ✅ TO‘G‘RI / SIZNING JAVOB
     html += `
       <div class="note">
-        ✔ To‘g‘ri: ${q.correct} | ✖ Siz: ${q.selected || "-"}
+        ✔ To‘g‘ri: ${q.correct} | ✖ Siz: ${q.selected || "Belgilamadingiz"}
       </div>
     `;
 
@@ -487,6 +512,7 @@ function showClosed(r){
 
 </body>
 </html>
+
 
 
 
