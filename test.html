@@ -379,32 +379,60 @@ resultTime.innerText = `⏱ Sarflangan vaqt: ${min} daqiqa ${sec} soniya`;
 }
 
 function showAnalysis(){
-  resultModal.style.display="none";
-  timer.style.display="none";
-  let html="<h2>📊 Test tahlili</h2>";
-  finalResult.answers.forEach((q,i)=>{
-    html+=`
+  resultModal.style.display = "none";
+  timer.style.display = "none";
+
+  let html = "<h2>📊 Test tahlili</h2>";
+
+  finalResult.answers.forEach((q, i) => {
+
+    html += `
       <div class="question-box" style="margin-top:20px">
-        ${i+1}. ${q.text}
-        ${q.image?`<div class="q-image"><img src="${q.image}"></div>`:""}
+        ${i + 1}. ${q.text}
+        ${q.image ? `<div class="q-image"><img src="${q.image}"></div>` : ""}
     `;
-    const order = ["A","B","C","D"];
 
-order.forEach(k=>{
-  if(!q.options[k]) return;
+    const order = ["A", "B", "C", "D"];
 
-  let cls="option";
-  if(k===q.correct) cls+=" correct";
-  else if(k===q.selected) cls+=" wrong";
+    order.forEach(k => {
+      if (!q.options[k]) return;
 
-  html+=`<div class="${cls}">${k}) ${q.options[k]}</div>`;
-});
+      let cls = "option";
+      if (k === q.correct) cls += " correct";
+      else if (k === q.selected) cls += " wrong";
 
-    html+=`
-      <div class="note">✔ To‘g‘ri: ${q.correct} | ✖ Siz: ${q.selected||"-"}</div>
-      </div>`;
+      html += `<div class="${cls}">${k}) ${q.options[k]}</div>`;
+    });
+
+    // ✅ TO‘G‘RI / SIZNING JAVOB
+    html += `
+      <div class="note">
+        ✔ To‘g‘ri: ${q.correct} | ✖ Siz: ${q.selected || "-"}
+      </div>
+    `;
+
+    // ✅ IZOH (FAKAT BO‘LSA)
+    if (q.explanation) {
+      html += `
+        <div style="
+          margin-top:12px;
+          padding:12px;
+          background:#f0fdf4;
+          border-left:4px solid #22c55e;
+          border-radius:10px;
+          font-weight:600;
+        ">
+          🧠 <b>Izoh:</b><br>
+          ${q.explanation}
+        </div>
+      `;
+    }
+
+    // 🔚 SAVOL BLOKINI YOPISH
+    html += `</div>`;
   });
-  main.innerHTML=html;
+
+  main.innerHTML = html;
 }
 
 function showClosed(r){
@@ -430,6 +458,7 @@ function showClosed(r){
 
 </body>
 </html>
+
 
 
 
