@@ -273,7 +273,7 @@ let test,index=0,answers={},timeLeft=0,finalResult=null,interval=null;
 
 function saveProgress(){
   localStorage.setItem(
-    "progress_" + testId + "_" + deviceId,
+    progressKey,
     JSON.stringify({
       testId,
       deviceId,
@@ -289,20 +289,26 @@ function saveProgress(){
 
 
 function loadProgress(){
-const progressKey = "progress_" + testId + "_" + deviceId;
+  const raw = localStorage.getItem(progressKey);
   if(!raw) return false;
 
   const p = JSON.parse(raw);
 
-  // ❌ Boshqa qurilma yoki boshqa test versiyasi
-  if(p.deviceId !== deviceId || p.version !== (test.version || 1)){
-    localStorage.removeItem("progress_" + testId);
+  // ❌ boshqa odam
+  if(p.ism !== user.ism || p.familiya !== user.familiya){
+    localStorage.removeItem(progressKey);
     return false;
   }
 
-  // ❌ Vaqt tugagan bo‘lsa — eski progressni O‘CHIRAMIZ
+  // ❌ boshqa test versiya
+  if(p.version !== (test.version || 1)){
+    localStorage.removeItem(progressKey);
+    return false;
+  }
+
+  // ❌ vaqt tugagan
   if(p.timeLeft <= 0){
-    localStorage.removeItem("progress_" + testId);
+    localStorage.removeItem(progressKey);
     return false;
   }
 
@@ -312,29 +318,6 @@ const progressKey = "progress_" + testId + "_" + deviceId;
 
   return true;
 }
-
-
-db.collection("tests").doc(testId).get().then(async d=>{
-  test=d.data();
-  const ver=test.version||1;
-
-  const snap=await db.collection("results")
-    .where("testId","==",testId)
-    .where("ism","==",user.ism)
-    .where("familiya","==",user.familiya)
-    .where("deviceId","==",deviceId)
-    .limit(1).get();
-
-  if(!snap.empty && snap.docs[0].data().testVersion===ver){
-    showClosed(snap.docs[0].data());
-    return;
-  }
-
-  timeLeft=Number(test.duration||60)*60;
-  loadProgress();
-  startTimer();
-  render();
-});
 
 function startTimer(){
   interval=setInterval(()=>{
@@ -381,7 +364,7 @@ function prev(){if(index>0){index--;saveProgress();render();}}
 
 function finish(){
   clearInterval(interval);
-  const progressKey = "progress_" + testId + "_" + deviceId;
+ localStorage.removeItem(progressKey);
 
   let correct=0;
   const full=[];
@@ -511,6 +494,7 @@ function showClosed(r){
 
 </body>
 </html>
+
 
 
 
