@@ -787,12 +787,19 @@ function loadExcel(){
     rows.forEach(row=>{
       const c=(row.Togri||"").toUpperCase();
       if(row.Savol && ["A","B","C","D"].includes(c) && questions.length<50){
-        questions.push({
-          text:row.Savol,
-          image:row.Rasm||"",
-          options:{A:row.A||"",B:row.B||"",C:row.C||"",D:row.D||""},
-          correct:c
-        });
+     questions.push({
+  text: row.Savol,
+  image: row.Rasm || "",
+  options: {
+    A: row.A || "",
+    B: row.B || "",
+    C: row.C || "",
+    D: row.D || ""
+  },
+  correct: c,
+  explanation: row.Izoh || ""   // 👈 YANGI QATOR
+});
+
       }
     });
     render();
@@ -806,6 +813,7 @@ loadSavedTests();
 
 </body>
 </html>
+
 
 
 
