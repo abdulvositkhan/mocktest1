@@ -625,21 +625,21 @@ function getTestStatus(t){
     return "unknown";
   }
 
-  const now = new Date();
-
-  const start = new Date(`${t.startDate}T${t.start}`);
-  const end   = new Date(`${t.endDate}T${t.end}`);
+  const now = Date.now();
+  const start = new Date(`${t.startDate}T${t.start}`).getTime();
+  const end   = new Date(`${t.endDate}T${t.end}`).getTime();
 
   if(now < start){
     return "upcoming";   // ⏳ Boshlanmagan
   }
 
-  if(now >= start && now <= end){
+  if(now <= end){
     return "active";     // 🟢 Active
   }
 
   return "ended";        // 🔴 Tugagan
 }
+
 
 /* LOAD TESTS */
 async function loadSavedTests(){
@@ -813,6 +813,7 @@ loadSavedTests();
 
 </body>
 </html>
+
 
 
 
