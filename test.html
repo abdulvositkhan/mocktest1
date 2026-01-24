@@ -440,62 +440,75 @@ resultTime.innerText = `⏱ Sarflangan vaqt: ${min} daqiqa ${sec} soniya`;
 
   resultModal.style.display="flex";
 }
+async function getAIExplanation(q) {
+  const res = await fetch(
+    "https://us-central1-mock-b8900.cloudfunctions.net/explainQuestion",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        question: q.text,
+        options: q.options,
+        correct: q.correct,
+        userAnswer: q.selected
+      })
+    }
+  );
 
-function showAnalysis(){
+  const data = await res.json();
+  return data.explanation || "Izoh topilmadi";
+}
+
+async function showAnalysis(){
   resultModal.style.display = "none";
   timer.style.display = "none";
 
   let html = "<h2>📊 Test tahlili</h2>";
+  main.innerHTML = html;
 
-  finalResult.answers.forEach((q, i) => {
+  for (let i = 0; i < finalResult.answers.length; i++) {
+    const q = finalResult.answers[i];
 
-    html += `
+    let block = `
       <div class="question-box" style="margin-top:20px">
         ${i + 1}. ${q.text}
         ${q.image ? `<div class="q-image"><img src="${q.image}"></div>` : ""}
     `;
 
-    const order = ["A", "B", "C", "D"];
-
-    order.forEach(k => {
+    ["A","B","C","D"].forEach(k => {
       if (!q.options[k]) return;
 
       let cls = "option";
       if (k === q.correct) cls += " correct";
       else if (k === q.selected) cls += " wrong";
 
-      html += `<div class="${cls}">${k}) ${q.options[k]}</div>`;
+      block += `<div class="${cls}">${k}) ${q.options[k]}</div>`;
     });
 
-    // ✅ TO‘G‘RI / SIZNING JAVOB
-    html += `
+    block += `
       <div class="note">
-        ✔ To‘g‘ri: ${q.correct} | ✖ Siz: ${q.selected || "Belgilamadingiz"}
+        ✔ To‘g‘ri: ${q.correct} | ✖ Siz: ${q.selected || "Belgilanmagan"}
+      </div>
+      <div id="ai-${i}" style="
+        margin-top:12px;
+        padding:12px;
+        background:#f0fdf4;
+        border-left:4px solid #22c55e;
+        border-radius:10px;
+        font-weight:600;
+      ">
+        🤖 AI izohlanmoqda...
+      </div>
       </div>
     `;
 
-    // ✅ IZOH (FAKAT BO‘LSA)
-    if (q.explanation) {
-      html += `
-        <div style="
-          margin-top:12px;
-          padding:12px;
-          background:#f0fdf4;
-          border-left:4px solid #22c55e;
-          border-radius:10px;
-          font-weight:600;
-        ">
-          🧠 <b>Izoh:</b><br>
-          ${q.explanation}
-        </div>
-      `;
-    }
+    main.innerHTML += block;
 
-    // 🔚 SAVOL BLOKINI YOPISH
-    html += `</div>`;
-  });
-
-  main.innerHTML = html;
+    // 🔥 AI DAN IZOH OLAMIZ
+    const explanation = await getAIExplanation(q);
+    document.getElementById(`ai-${i}`).innerHTML =
+      "🧠 <b>Izoh:</b><br>" + explanation;
+  }
 }
 
 function showClosed(r){
@@ -521,6 +534,7 @@ function showClosed(r){
 
 </body>
 </html>
+
 
 
 
